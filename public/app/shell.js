@@ -11,6 +11,7 @@ import { Modal, ConfirmHost, Popover, MenuItem, menuKeys } from './components/ov
 import { Toaster, toast } from './components/toast.js';
 import { api } from './api.js';
 import { isCompact } from './components/media-query.js';
+import { EntryOverlay } from './components/entry-overlay.js';
 
 export function App() {
   return html`<${LocationProvider}><${Gate} /></${LocationProvider}>`;
@@ -147,6 +148,7 @@ function Shell() {
       </button>
     </nav>
     <${MoreSheet} open=${moreOpen} onClose=${() => setMoreOpen(false)} />
+    <${EntryOverlay} />
     <${Toaster} />
     <${ConfirmHost} />
   </div>`;

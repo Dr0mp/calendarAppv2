@@ -518,6 +518,20 @@
         flex: 1;
       }
     }
+
+    &.segmented--wrap {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 120px), 1fr));
+
+      & button {
+        white-space: normal;
+        text-align: center;
+        line-height: 1.2;
+        block-size: auto;
+        min-block-size: calc(var(--control-h) - 8px);
+        padding-block: 6px;
+      }
+    }
   }
 
   /* ================================================================
@@ -1128,8 +1142,13 @@
   @media (width <= 900px) {
     .toasts {
       inset-inline: var(--space-3);
-      inset-block-end: calc(var(--tabbar-h) + var(--safe-bottom) + var(--space-3));
+      inset-block-end: calc(var(--tabbar-h) + var(--safe-bottom) + var(--space-3) + var(--toast-lift, 0px));
       align-items: stretch;
+    }
+
+    /* Keep toasts clear of a docked action bar (scheduling form). */
+    .app:has(.action-bar) {
+      --toast-lift: 104px;
     }
 
     .toast {
@@ -1464,6 +1483,23 @@
 
     &[data-level='critical'] > span {
       background: var(--danger);
+    }
+  }
+
+  .img-fallback {
+    display: grid;
+    place-items: center;
+    inline-size: 100%;
+    block-size: 100%;
+    min-block-size: 48px;
+    background:
+      repeating-linear-gradient(135deg, transparent 0 12px, color-mix(in oklch, var(--text-muted) 6%, transparent) 12px 24px),
+      var(--surface-2);
+    color: var(--text-disabled);
+
+    & .icon {
+      inline-size: 28px;
+      block-size: 28px;
     }
   }
 

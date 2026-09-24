@@ -107,9 +107,9 @@ export function Alert({ tone = 'info', title, children, icon, class: cls = '', r
 /**
  * Segmented control (radio-group semantics). Used for view switches and entry type.
  * @param {{options: {value: string, label: any, icon?: string, disabled?: boolean}[], value: string,
- *   onChange: (v: string) => void, label: string, block?: boolean, size?: string}} p
+ *   onChange: (v: string) => void, label: string, block?: boolean, wrap?: boolean, size?: string}} p
  */
-export function Segmented({ options, value, onChange, label, block }) {
+export function Segmented({ options, value, onChange, label, block, wrap }) {
   const ref = useRef(/** @type {HTMLDivElement|null} */ (null));
   /** @param {KeyboardEvent} e */
   function onKey(e) {
@@ -124,7 +124,7 @@ export function Segmented({ options, value, onChange, label, block }) {
     onChange(enabled[i].value);
     requestAnimationFrame(() => ref.current?.querySelector(`[aria-checked="true"]`)?.focus());
   }
-  return html`<div class=${`segmented ${block ? 'segmented--block' : ''}`} role="radiogroup" aria-label=${label} ref=${ref} onKeyDown=${onKey}>
+  return html`<div class=${`segmented ${block ? 'segmented--block' : ''} ${wrap ? 'segmented--wrap' : ''}`} role="radiogroup" aria-label=${label} ref=${ref} onKeyDown=${onKey}>
     ${options.map(
       (o) => html`<button type="button" role="radio" aria-checked=${o.value === value ? 'true' : 'false'} tabindex=${o.value === value ? 0 : -1}
         disabled=${o.disabled} onClick=${() => onChange(o.value)} data-value=${o.value}>
@@ -298,4 +298,16 @@ export function useAutofocus() {
     ref.current?.focus();
   }, []);
   return ref;
+}
+
+/**
+ * An image that falls back to a neutral placeholder when it fails to load
+ * (offline, expired external link).
+ * @param {{src: string, alt?: string, class?: string, icon?: string}} p
+ */
+export function SafeImg({ src, alt = '', class: cls = '', icon = 'image' }) {
+  const [failed, setFailed] = useState(false);
+  useEffect(() => setFailed(false), [src]);
+  if (failed) return html`<div class=${`img-fallback ${cls}`} role=${alt ? 'img' : undefined} aria-label=${alt || undefined}><${Icon} name=${icon} /></div>`;
+  return html`<img class=${cls} src=${src} alt=${alt} loading="lazy" referrerpolicy="no-referrer" onError=${() => setFailed(true)} />`;
 }

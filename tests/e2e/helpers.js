@@ -62,3 +62,28 @@ export async function signOut(page) {
 /** Ensure an active account exists. @param {import('@playwright/test').APIRequestContext} request */
 export const ensureUser = (request, username, password, role = 'user', extra = {}) =>
   testApi(request, 'POST', 'user', { username, password, role, ...extra });
+
+/** Call the API from inside the page (same cookies, CSRF header). @param {import('@playwright/test').Page} page */
+export async function apiInPage(page, method, path, body, version) {
+  return page.evaluate(
+    async ({ method, path, body, version }) => {
+      const s = await (await fetch('/api/v1/session')).json();
+      /** @type {Record<string,string>} */ const headers = { 'Content-Type': 'application/json', 'X-CSRF-Token': s.csrfToken ?? '' };
+      if (version !== undefined) headers['If-Match'] = `W/"${version}"`;
+      const r = await fetch(`/api/v1${path}`, { method, headers, body: body === undefined ? undefined : JSON.stringify(body) });
+      return { status: r.status, data: await r.json().catch(() => null) };
+    },
+    { method, path, body, version },
+  );
+}
+
+/** Serve fake https cover images from the sample file (tests run offline). @param {import('@playwright/test').Page} page */
+export async function fakeImages(page) {
+  await page.route('https://img.test/**', (route) => route.fulfill({ path: 'public/sample/cover-16x9.webp', contentType: 'image/webp' }));
+}
+
+/** YYYY-MM-DD `n` days from today in Bucharest. @param {number} n */
+export function dayFromToday(n) {
+  const now = new Date(Date.now() + n * 86_400_000);
+  return new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Bucharest' }).format(now);
+}

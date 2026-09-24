@@ -107,7 +107,3 @@ meRoutes.delete('/me/passkeys/:id', (c) => {
   return c.json({ ok: true });
 });
 
-meRoutes.get('/me/counts', (c) => {
-  requireUser(c);
-  return c.json({ myUpcoming: 0, promotions: 0 });
-});

@@ -75,5 +75,40 @@ export const ADMIN_ROWS = [
   ['GET', '/admin/summary', undefined, { anon: 401, user: 403, moderator: 403, admin: 200, demo: 403, demo_admin: 200 }],
 ];
 
+const future = '2099-06-01';
+/** Entry fixtures created before the matrix runs (ids filled in `before`). */
+const fx = { userEntry: '', adminEntry: '', room: '' };
+const blocked = (d) => ({ type: 'blocked', title: 'Matrix', space_id: null, sessions: [{ date: d, start: '10:00', end: '11:00' }] });
+
+/** @type {Row[]} */
+export const ENTRY_ROWS = [
+  ['GET', `/entries?from=${future}&to=2099-06-30`, undefined, { anon: 401, user: 200, moderator: 200, admin: 200, demo: 200, demo_admin: 200 }],
+  ['GET', () => `/entries/${fx.userEntry}`, undefined, { anon: 401, user: 200, moderator: 200, admin: 200, demo: 404, demo_admin: 404 }],
+  ['POST', '/entries', { entry: blocked('2099-06-02') }, { anon: 401 }],
+  ['POST', '/entries', { entry: { type: 'room_only', title: 'M', sessions: [], room_bookings: [] } }, { anon: 401, user: 403, demo: 403 }],
+  ['PATCH', () => `/entries/${fx.adminEntry}`, blocked('2099-06-03'), { anon: 401, user: 428, moderator: 428 }],
+  ['POST', () => `/entries/${fx.userEntry}/reassign`, { ownerId: '00000000-0000-7000-8000-000000000000' }, { anon: 401, user: 403, moderator: 403, demo: 404, demo_admin: 404 }],
+  ['PUT', () => `/entries/${fx.userEntry}/room-bookings`, { room_bookings: [] }, { anon: 401, user: 403 }],
+  ['POST', '/availability', { type: 'event', sessions: [] }, { anon: 401, user: 200, moderator: 200, admin: 200, demo: 200, demo_admin: 200 }],
+  ['GET', '/me/counts', undefined, { anon: 401, user: 200, admin: 200 }],
+];
+
 describe('account endpoints', () => runMatrix(ACCOUNT_ROWS));
+describe('entries', () => {
+  before(async () => {
+    fx.userEntry = (await actors.user.post('/entries', { entry: blocked('2099-06-10') })).data.id;
+    fx.adminEntry = (await actors.admin.post('/entries', { entry: blocked('2099-06-11') })).data.id;
+  });
+  runMatrix(ENTRY_ROWS);
+  test('edit and delete: own only for users and moderators, any for admins', async () => {
+    const other = (await actors.admin.get(`/entries/${fx.adminEntry}`)).data;
+    for (const who of ['user', 'moderator']) {
+      assert.equal((await actors[who].patch(`/entries/${fx.adminEntry}`, blocked('2099-06-11'), other.version)).status, 403, who);
+      assert.equal((await actors[who].del(`/entries/${fx.adminEntry}`, other.version)).status, 403, who);
+    }
+    const mine = (await actors.user.get(`/entries/${fx.userEntry}`)).data;
+    assert.equal((await actors.admin.patch(`/entries/${fx.userEntry}`, blocked('2099-06-12'), mine.version)).status, 200);
+    assert.equal((await actors.user.del(`/entries/${fx.userEntry}`, mine.version + 1)).status, 200);
+  });
+});
 describe('venues, users and settings', () => runMatrix(ADMIN_ROWS));
