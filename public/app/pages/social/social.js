@@ -4,6 +4,7 @@ import { t } from '../../i18n/index.js';
 import { store } from '../../state/prefs.js';
 import { usePageChrome } from '../../state/chrome.js';
 import { loadPlatforms, platforms, postsRevision } from '../../state/social.js';
+import { counts } from '../../state/counts.js';
 import { api } from '../../api.js';
 import { Button, EmptyState, Icon, IconButton, SearchField, Segmented, Select } from '../../components/ui.js';
 import { isCompact } from '../../components/media-query.js';
@@ -103,6 +104,8 @@ export default function Social() {
             { value: 'month', label: t('social.viewMonth') },
             { value: 'list', label: t('social.viewList') },
           ]} />
+        <a class="btn btn--secondary" href="/social/queue"><${Icon} name="megaphone" /><span class=${compact ? 'sr-only' : ''}>${t('social.queue')}</span>
+          ${counts.value.promotions > 0 && html`<span class="count count--accent" aria-label=${t('social.pendingCount', { n: counts.value.promotions })}>${counts.value.promotions}</span>`}</a>
         <a class="btn btn--secondary" href="/social/platforms"><${Icon} name="layers" /><span class=${compact ? 'sr-only' : ''}>${t('social.platforms')}</span></a>
         <${Button} variant="primary" icon="plus" class="hide-compact" onClick=${() => nav({ edit: 'new' })}>${t('social.newPost')}</${Button}>
       </div>

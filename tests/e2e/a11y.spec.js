@@ -40,6 +40,8 @@ test.describe('accessibility', () => {
         '/social?view=month',
         '/social?view=list',
         '/social?edit=new',
+        '/social/queue',
+        '/social/queue?filter=all',
         '/social/platforms',
         '/social/standards',
       ]) {

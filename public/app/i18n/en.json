@@ -254,7 +254,8 @@
     "invalid_event": "That event doesn't exist.",
     "invalid_domain": "Invalid domain, e.g. example.com.",
     "max_below_min": "The maximum must be at least the minimum.",
-    "confirm_mismatch": "The name doesn't match."
+    "confirm_mismatch": "The name doesn't match.",
+    "already_promoted": "The event already has posts."
   },
   "styleguide": {
     "title": "Style guide",
@@ -862,6 +863,26 @@
     "diffFormats": "Formats: {added} added, {updated} changed, {removed} removed, {kept} kept",
     "diffPosts": "Posts: {added} added, {updated} changed, {removed} removed, {unchanged} unchanged",
     "warn_format_kept": "{platform}: the “{format}” format is missing from the file but has posts, so it stays.",
-    "warn_media_missing": "“{title}”: a media file doesn't exist here and was skipped."
+    "warn_media_missing": "“{title}”: a media file doesn't exist here and was skipped.",
+    "queue": "Promotion queue",
+    "queueIntro": "Upcoming public events, soonest first. Create a post or skip the event.",
+    "queueFilter": "Filter the queue",
+    "queue_pending": "To promote",
+    "queue_promoted": "Promoted",
+    "queue_skipped": "Skipped",
+    "queue_all": "All",
+    "queueEmpty_pending": "Nothing to promote",
+    "queueEmpty_promoted": "No promoted events",
+    "queueEmpty_skipped": "No skipped events",
+    "queueEmpty_all": "No upcoming public events",
+    "queueEmptyText": "New public events show up here automatically.",
+    "createPost": "Create post",
+    "skip": "Skip",
+    "unskip": "Undo skip",
+    "skipped": "“{title}” skipped.",
+    "unskipped": "“{title}” is back in the queue.",
+    "isSkipped": "Skipped",
+    "linkedPosts": "Linked posts",
+    "pendingCount": "{n, plural, one {# event to promote} other {# events to promote}}"
   }
 }

@@ -254,7 +254,8 @@
     "invalid_event": "Evenimentul nu există.",
     "invalid_domain": "Domeniu invalid, de ex. exemplu.ro.",
     "max_below_min": "Maximul trebuie să fie cel puțin cât minimul.",
-    "confirm_mismatch": "Numele nu se potrivește."
+    "confirm_mismatch": "Numele nu se potrivește.",
+    "already_promoted": "Evenimentul are deja postări."
   },
   "styleguide": {
     "title": "Ghid de stil",
@@ -862,6 +863,26 @@
     "diffFormats": "Formate: {added} adăugate, {updated} modificate, {removed} șterse, {kept} păstrate",
     "diffPosts": "Postări: {added} adăugate, {updated} modificate, {removed} șterse, {unchanged} neschimbate",
     "warn_format_kept": "{platform}: formatul „{format}” lipsește din fișier, dar are postări și rămâne.",
-    "warn_media_missing": "„{title}”: un fișier media nu există aici și a fost omis."
+    "warn_media_missing": "„{title}”: un fișier media nu există aici și a fost omis.",
+    "queue": "Coadă promovare",
+    "queueIntro": "Evenimentele publice viitoare, de la cel mai apropiat. Creează o postare sau ignoră evenimentul.",
+    "queueFilter": "Filtrează coada",
+    "queue_pending": "De promovat",
+    "queue_promoted": "Promovate",
+    "queue_skipped": "Ignorate",
+    "queue_all": "Toate",
+    "queueEmpty_pending": "Nimic de promovat",
+    "queueEmpty_promoted": "Niciun eveniment promovat",
+    "queueEmpty_skipped": "Niciun eveniment ignorat",
+    "queueEmpty_all": "Niciun eveniment public viitor",
+    "queueEmptyText": "Evenimentele publice noi apar aici automat.",
+    "createPost": "Creează postare",
+    "skip": "Ignoră",
+    "unskip": "Anulează ignorarea",
+    "skipped": "„{title}” a fost ignorat.",
+    "unskipped": "„{title}” a revenit în coadă.",
+    "isSkipped": "Ignorat",
+    "linkedPosts": "Postări legate",
+    "pendingCount": "{n, plural, one {# eveniment de promovat} few {# evenimente de promovat} other {# de evenimente de promovat}}"
   }
 }

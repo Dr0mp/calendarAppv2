@@ -1,5 +1,6 @@
 import { signal } from '@preact/signals';
 import { api } from '../api.js';
+import { refreshCounts } from './counts.js';
 
 /** Platforms with their formats (admins only), cached per session. */
 export const platforms = signal(/** @type {any[]|null} */ (null));
@@ -28,6 +29,8 @@ export const setPlatforms = (items) => {
 
 export const invalidatePosts = () => {
   postsRevision.value++;
+  // Posts change promotion status, which drives the queue badge.
+  refreshCounts();
 };
 
 /** @param {string|null|undefined} id */

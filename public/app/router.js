@@ -10,6 +10,7 @@ export const pages = {
   entry: lazy(() => import('./pages/entry/entry-page.js')),
   myEntries: lazy(() => import('./pages/my-entries/my-entries.js')),
   social: lazy(() => import('./pages/social/social.js')),
+  queue: lazy(() => import('./pages/social/queue.js')),
   platforms: lazy(() => import('./pages/social/platforms.js')),
   standards: lazy(() => import('./pages/social/standards.js')),
   admin: lazy(() => import('./pages/admin/admin.js')),

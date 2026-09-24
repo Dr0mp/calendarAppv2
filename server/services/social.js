@@ -6,6 +6,7 @@ import { DEFAULT_FORMATS, EXPORT_SCHEMA_VERSION } from '../../shared/schemas/soc
 import { kindOfUrl, scheduleBlockers } from '../../shared/rules/media-rules.js';
 import { isPastMoment } from '../../shared/rules/time.js';
 import { getMedia, ingestBuffer, mediaView } from './media.js';
+import { setSetting } from './settings.js';
 import sample from '../seed/sample-content.json' with { type: 'json' };
 
 /** @typedef {import('../app.js').App} App */
@@ -533,6 +534,8 @@ export function createPost(ws, actor, input) {
     });
     writeMedia(ws, id, input.media);
     syncPromotion(ws, [input.event_id]);
+    // "Create post" from the queue remembers the platform for next time.
+    if (input.event_id) setSetting(ws.db, 'last_promo_platform', input.platform_id);
     audit(ws.db, { userId: actor.id, action: 'post.create', entity: 'post', entityId: id, details: { title: input.title, status: input.status } });
   });
   return getPost(ws, id);

@@ -124,3 +124,15 @@ export const MEDIA_ROWS = /** @type {Row[]} */ ([
 ]);
 
 describe('media', () => runMatrix(MEDIA_ROWS));
+
+export const SOCIAL_ROWS = /** @type {Row[]} */ ([
+  ['GET', '/platforms', undefined, { anon: 401, user: 403, moderator: 403, admin: 200, demo: 403, demo_admin: 200 }],
+  ['POST', '/platforms/reset', {}, { anon: 401, user: 403, moderator: 403, admin: 200, demo: 403, demo_admin: 200 }],
+  ['GET', '/posts', undefined, { anon: 401, user: 403, moderator: 403, admin: 200, demo: 403, demo_admin: 200 }],
+  ['POST', '/posts', {}, { anon: 401, user: 403, moderator: 403, admin: 400, demo: 403, demo_admin: 400 }],
+  ['GET', '/social/export', undefined, { anon: 401, user: 403, moderator: 403, admin: 200, demo: 403, demo_admin: 200 }],
+  ['GET', '/promotions', undefined, { anon: 401, user: 403, moderator: 403, admin: 200, demo: 403, demo_admin: 200 }],
+  ['POST', '/promotions/01900000-0000-7000-8000-000000000000/skip', undefined, { anon: 401, user: 403, moderator: 403, admin: 404, demo: 403, demo_admin: 404 }],
+]);
+
+describe('social and promotions', () => runMatrix(SOCIAL_ROWS));

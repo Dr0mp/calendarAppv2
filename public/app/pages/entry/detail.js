@@ -93,9 +93,7 @@ export function EntryDetail({ id, onClose, onChanged, onLoaded }) {
     ${e.type === 'blocked' && e.description === null
       ? html`<p class="muted small"><${Icon} name="lock" /> ${t('entry.privateNotes')}</p>`
       : e.description && html`<div class="entry-description"><${RichText} text=${e.description} /></div>`}
-    ${isAdmin.value && e.type === 'event' && html`<section class="detail-block"><${Icon} name="megaphone" />
-      <div><${Badge} tone=${e.promotion_status === 'promoted' ? 'success' : e.promotion_status === 'skipped' ? 'neutral' : 'warning'}>
-        ${t(`entry.promo_${e.promotion_status ?? 'pending'}`)}</${Badge}></div></section>`}
+    ${isAdmin.value && e.type === 'event' && html`<${PromotionBlock} e=${e} />`}
 
     ${e.series_id && html`<${SeriesList} seriesId=${e.series_id} current=${e.id} />`}
     ${!e.can_edit && html`<p class="small muted view-only"><${Icon} name="eye" /> ${t('entry.viewOnly', { name: e.owner.name })}</p>`}
@@ -158,6 +156,32 @@ function SeriesList({ seriesId, current }) {
               aria-current=${o.id === current ? 'true' : undefined} data-past=${o.past ? 'true' : undefined}>${fmtDayMonth(o.date)}</a></li>`,
           )}</ul>`
         : html`<${Skeleton} h="28px" />`)}
+    </div>
+  </section>`;
+}
+
+/** Admins: the event's promotion status, its posts and a shortcut to promote it. @param {{e: any}} p */
+function PromotionBlock({ e }) {
+  const [posts, setPosts] = useState(/** @type {any[]} */ ([]));
+  useEffect(() => {
+    let live = true;
+    api('GET', '/posts', { query: { event: e.id } })
+      .then((r) => live && setPosts(r.items))
+      .catch(() => {});
+    return () => {
+      live = false;
+    };
+  }, [e.id, e.version]);
+  return html`<section class="detail-block"><${Icon} name="megaphone" />
+    <div class="stack" style=${{ '--stack-gap': 'var(--space-2)' }}>
+      <div class="cluster" style=${{ '--cluster-gap': 'var(--space-2)' }}>
+        <${Badge} tone=${e.promotion_status === 'promoted' ? 'success' : e.promotion_status === 'skipped' ? 'neutral' : 'warning'}>
+          ${t(`entry.promo_${e.promotion_status ?? 'pending'}`)}</${Badge}>
+        <a class="small" href=${`/social/queue?edit=new&event=${e.id}`}>${t('social.createPost')}</a>
+      </div>
+      ${posts.length > 0 && html`<ul class="plain-list small">
+        ${posts.map((p) => html`<li><a href=${`/social?post=${p.id}&date=${p.publish_date}`}>${p.platform.name} · ${fmtDayMonth(p.publish_date)} · ${p.title}</a></li>`)}
+      </ul>`}
     </div>
   </section>`;
 }

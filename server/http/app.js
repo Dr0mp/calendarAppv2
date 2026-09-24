@@ -16,6 +16,7 @@ import { settingsRoutes } from './routes/settings.js';
 import { entryRoutes } from './routes/entries.js';
 import { mediaRoutes, mediaFileRoute } from './routes/media.js';
 import { socialRoutes } from './routes/social.js';
+import { promotionRoutes } from './routes/promotions.js';
 import { storageRoutes } from './routes/storage.js';
 import { testRoutes } from './routes/test.js';
 import { loadUser } from '../services/users.js';
@@ -157,6 +158,7 @@ export function createHttpApp(app) {
   api.route('/', entryRoutes);
   api.route('/', mediaRoutes);
   api.route('/', socialRoutes);
+  api.route('/', promotionRoutes);
   api.route('/', storageRoutes);
   if (app.config.isTest) api.route('/', testRoutes);
   api.all('*', () => {

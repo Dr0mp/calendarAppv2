@@ -9,6 +9,7 @@ import { toast } from '../../components/toast.js';
 import { SortableList } from '../../components/sortable.js';
 import { CropDialog, DropZone, MediaPicker, UploadList, uploadFiles } from '../../components/media-picker.js';
 import { PlatformIcon } from '../../components/platform-icon.js';
+import { isCompact } from '../../components/media-query.js';
 import { addDays, fmtBytes, isPastMoment, nextFullHour, today } from '../../time.js';
 import { captionState, checkItem, checkList, kindOfUrl, maxItems, scheduleBlockers } from '/shared/rules/media-rules.js';
 import { isHttpsUrl, isShareLink } from '/shared/schemas/common.js';
@@ -81,10 +82,10 @@ export function nextFreeHour(posts) {
 }
 
 /**
- * @param {{id?: string|null, on?: string|null, dup?: string|null, platformHint?: string, prefill?: Partial<PostForm>|null,
+ * @param {{id?: string|null, on?: string|null, dup?: string|null, eventId?: string|null, platformHint?: string, prefill?: Partial<PostForm>|null,
  *   onDone: (saved: any|null, next?: {dup?: string}) => void, onTitle: (s: string) => void}} p
  */
-export function PostEditor({ id, on, dup, platformHint, prefill, onDone, onTitle }) {
+export function PostEditor({ id, on, dup, eventId, platformHint, prefill, onDone, onTitle }) {
   const [form, setForm] = useState(/** @type {PostForm|null} */ (null));
   const [version, setVersion] = useState(/** @type {number|null} */ (null));
   const [original, setOriginal] = useState(/** @type {{date: string, time: string}|null} */ (null));
@@ -96,7 +97,7 @@ export function PostEditor({ id, on, dup, platformHint, prefill, onDone, onTitle
   const [libOpen, setLibOpen] = useState(false);
   const [urlDraft, setUrlDraft] = useState('');
   const [cropItem, setCropItem] = useState(/** @type {MediaItem|null} */ (null));
-  const [cardOpen, setCardOpen] = useState(store.get('social.standardsOpen') !== false);
+  const [cardOpen, setCardOpen] = useState(/** @type {boolean} */ (store.get('social.standardsOpen') ?? !isCompact.value));
 
   useEffect(() => {
     onTitle(id ? t('social.editPost') : t('social.newPost'));
@@ -127,6 +128,17 @@ export function PostEditor({ id, on, dup, platformHint, prefill, onDone, onTitle
         setForm(f);
         return;
       }
+      if (eventId) {
+        // "Creează postare" from the promotion queue: the server builds the draft.
+        const d = await api('GET', `/promotions/${eventId}/draft`);
+        if (!live) return;
+        const pl = list.find((p) => p.id === d.platform_id) ?? defaultPlatform(list);
+        setForm({
+          platform_id: pl.id, format_id: d.format_id ?? pl.formats[0].id, publish_date: d.publish_date, publish_time: d.publish_time, title: d.title,
+          caption: d.caption, status: 'draft', media: d.media.map(toItem), share_link: '', event_id: d.event_id, event: d.event,
+        });
+        return;
+      }
       const pl = defaultPlatform(list, prefill?.platform_id ?? platformHint);
       const nh = nextFullHour();
       const date = on && on > nh.date ? on : nh.date;
@@ -142,7 +154,7 @@ export function PostEditor({ id, on, dup, platformHint, prefill, onDone, onTitle
     return () => {
       live = false;
     };
-  }, [id, dup]);
+  }, [id, dup, eventId]);
 
   // Probe external URLs once.
   useEffect(() => {

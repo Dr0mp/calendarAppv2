@@ -95,7 +95,7 @@ function Shell() {
     { href: '/schedule', icon: 'calendar-plus', label: t('nav.schedule'), short: t('nav.schedule'), match: /^\/schedule/ },
     { href: '/my-events', icon: 'list', label: t('nav.myEvents'), short: t('nav.mine'), match: /^\/my-events/, count: counts.value.myUpcoming },
     ...(isAdmin.value
-      ? [{ href: '/social', icon: 'megaphone', label: t('nav.social'), short: t('nav.social'), match: /^\/social/, count: null }]
+      ? [{ href: '/social', icon: 'megaphone', label: t('nav.social'), short: t('nav.social'), match: /^\/social/, count: counts.value.promotions || null }]
       : []),
   ];
   const storageLevel = session.value?.storage;
@@ -167,6 +167,7 @@ function routesFor() {
       <${Route} path="/my-events" component=${pages.myEntries} />
       <${Route} path="/account" component=${pages.account} />
       <${Route} path="/social" component=${u?.role === 'admin' ? pages.social : Forbidden} />
+      <${Route} path="/social/queue" component=${u?.role === 'admin' ? pages.queue : Forbidden} />
       <${Route} path="/social/platforms" component=${u?.role === 'admin' ? pages.platforms : Forbidden} />
       <${Route} path="/social/standards" component=${u?.role === 'admin' ? pages.standards : Forbidden} />
       <${Route} path="/admin" component=${u?.role === 'admin' ? pages.admin : Forbidden} />
