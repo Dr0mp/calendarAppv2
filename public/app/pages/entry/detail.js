@@ -1,13 +1,11 @@
 import { html, useEffect, useState } from '../../html.js';
 import { t } from '../../i18n/index.js';
 import { user, isAdmin } from '../../state/session.js';
-import { directory, loadVenues } from '../../state/venues.js';
 import { invalidateEntries } from '../../state/entries.js';
 import { api, ApiError } from '../../api.js';
-import { Alert, Avatar, Badge, Button, Icon, SafeImg, Select, Skeleton } from '../../components/ui.js';
-import { Modal } from '../../components/overlay.js';
-import { toast } from '../../components/toast.js';
+import { Alert, Avatar, Badge, Button, Icon, SafeImg, Skeleton } from '../../components/ui.js';
 import { RichText } from '../../components/richtext.js';
+import { ReassignDialog } from './reassign.js';
 import { fmtDateLong, fmtDayMonth, fmtMoney, fmtInstant } from '../../time.js';
 
 export const TYPE_ICON = { event: 'ticket', blocked: 'lock', room_only: 'bed' };
@@ -105,39 +103,8 @@ export function EntryDetail({ id, onClose, onChanged, onLoaded }) {
       ${isAdmin.value && html`<${Button} icon="user-round-cog" onClick=${() => setReassign(true)}>${t('entry.reassign')}</${Button}>`}
       ${e.can_delete && html`<${Button} variant="danger-ghost" icon="trash-2" onClick=${remove}>${t('common.delete')}</${Button}>`}
     </div>
-    ${reassign && html`<${ReassignDialog} entry=${e} onClose=${() => setReassign(false)} onDone=${() => (setReassign(false), load(), invalidateEntries(), onChanged?.())} />`}
+    ${reassign && html`<${ReassignDialog} entries=${[e]} onClose=${() => setReassign(false)} onDone=${() => (setReassign(false), load(), invalidateEntries(), onChanged?.())} />`}
   </article>`;
-}
-
-/** @param {{entry: any, onClose: () => void, onDone: () => void}} p */
-function ReassignDialog({ entry, onClose, onDone }) {
-  const [owner, setOwner] = useState('');
-  const [busy, setBusy] = useState(false);
-  useEffect(() => {
-    loadVenues();
-  }, []);
-  async function submit() {
-    setBusy(true);
-    try {
-      await api('POST', `/entries/${entry.id}/reassign`, { body: { ownerId: owner } });
-      toast('success', t('entry.reassigned'));
-      onDone();
-    } catch (err) {
-      toast('danger', err instanceof ApiError ? err.text : t('errors.generic'));
-    } finally {
-      setBusy(false);
-    }
-  }
-  const users = (directory.value ?? []).filter((u) => u.id !== entry.owner.id);
-  return html`<${Modal} open onClose=${onClose} title=${t('entry.reassignTitle')}
-    footer=${html`<${Button} onClick=${onClose}>${t('common.cancel')}</${Button}>
-      <${Button} variant="primary" busy=${busy} disabled=${!owner} onClick=${submit}>${t('entry.reassign')}</${Button}>`}>
-    <div class="field">
-      <label for="reassign-owner">${t('entry.newOwner')}</label>
-      <${Select} id="reassign-owner" value=${owner} onChange=${setOwner} placeholder=${t('admin.chooseUser')}
-        options=${users.map((u) => ({ value: u.id, label: u.name }))} />
-    </div>
-  </${Modal}>`;
 }
 
 /** "See all occurrences": the dates of the series, each linking to its entry. @param {{seriesId: string, current: string}} p */

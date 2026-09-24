@@ -313,11 +313,11 @@ export function usagesOf(ws, id) {
   return {
     entries: /** @type {any[]} */ (ws.db.prepare('SELECT id, title FROM entries WHERE cover_media_id = ?').all(id)),
     posts: /** @type {any[]} */ (ws.db.prepare('SELECT DISTINCT p.id, p.title FROM post_media pm JOIN posts p ON p.id = pm.post_id WHERE pm.media_id = ?').all(id)),
-    platforms: /** @type {any[]} */ (ws.db.prepare('SELECT id, name AS title FROM platforms WHERE icon_media_id = ?').all(id)),
+    platforms: /** @type {any[]} */ (ws.db.prepare('SELECT id, name AS title FROM platforms WHERE icon_media_id = ? OR favicon_media_id = ?').all(id, id)),
   };
 }
 
-const REFERENCED = `
+export const REFERENCED = `
   SELECT cover_media_id AS id FROM entries WHERE cover_media_id IS NOT NULL
   UNION SELECT media_id FROM post_media WHERE media_id IS NOT NULL
   UNION SELECT icon_media_id FROM platforms WHERE icon_media_id IS NOT NULL
@@ -387,6 +387,33 @@ export function cleanupMedia(_app, ws, opts = {}) {
     }
   }
   return { removed: rows.length, bytes };
+}
+
+/** Ids of media nothing references (any age). @param {import('../app.js').Workspace} ws */
+export function unreferencedIds(ws) {
+  return new Set(/** @type {any[]} */ (ws.db.prepare(`SELECT id FROM media WHERE id NOT IN (${REFERENCED})`).all()).map((r) => r.id));
+}
+
+/**
+ * Delete these media records and their files now, if nothing references
+ * them (used by the storage cleanup tools).
+ * @param {import('../app.js').Workspace} ws @param {Iterable<string>} ids
+ */
+export function purgeMedia(ws, ids) {
+  const free = unreferencedIds(ws);
+  let removed = 0;
+  let bytes = 0;
+  for (const id of ids) {
+    if (!free.has(id)) continue;
+    const m = /** @type {any} */ (ws.db.prepare('SELECT * FROM media WHERE id = ?').get(id));
+    if (!m) continue;
+    ws.db.prepare('DELETE FROM media WHERE id = ?').run(id);
+    fs.rmSync(abs(ws, m.path), { force: true });
+    if (m.thumb_path) fs.rmSync(abs(ws, m.thumb_path), { force: true });
+    removed++;
+    bytes += m.bytes + m.thumb_bytes;
+  }
+  return { removed, bytes };
 }
 
 /** Unreferenced media (any age), for the storage breakdown. @param {import('../app.js').Workspace} ws */

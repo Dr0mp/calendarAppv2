@@ -35,7 +35,9 @@ const jobs = startJobs(app, {
     cleanupMedia(app, app.workspaces.main);
     cleanupMedia(app, app.workspaces.demo);
   },
-  backup: () => runNightlyBackup(app),
+  backup: async () => {
+    await runNightlyBackup(app);
+  },
 });
 
 const server = serve({ fetch: http.fetch, port: config.port }, (info) => {

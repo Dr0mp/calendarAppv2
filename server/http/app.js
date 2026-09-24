@@ -18,6 +18,7 @@ import { mediaRoutes, mediaFileRoute } from './routes/media.js';
 import { socialRoutes } from './routes/social.js';
 import { promotionRoutes } from './routes/promotions.js';
 import { storageRoutes } from './routes/storage.js';
+import { adminRoutes } from './routes/admin.js';
 import { testRoutes } from './routes/test.js';
 import { loadUser } from '../services/users.js';
 
@@ -160,6 +161,7 @@ export function createHttpApp(app) {
   api.route('/', socialRoutes);
   api.route('/', promotionRoutes);
   api.route('/', storageRoutes);
+  api.route('/', adminRoutes);
   if (app.config.isTest) api.route('/', testRoutes);
   api.all('*', () => {
     throw new ApiError(404, 'not_found', 'No such endpoint');

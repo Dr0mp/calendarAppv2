@@ -136,3 +136,14 @@ export const SOCIAL_ROWS = /** @type {Row[]} */ ([
 ]);
 
 describe('social and promotions', () => runMatrix(SOCIAL_ROWS));
+
+export const STORAGE_ROWS = /** @type {Row[]} */ ([
+  ['GET', '/storage', undefined, { anon: 401, user: 403, moderator: 403, admin: 200, demo: 403, demo_admin: 200 }],
+  ['POST', '/storage/cleanup/unreferenced?dryRun=1', {}, { anon: 401, user: 403, moderator: 403, admin: 200, demo: 403, demo_admin: 200 }],
+  ['GET', '/backup', undefined, { anon: 401, user: 403, moderator: 403, admin: 200, demo: 403, demo_admin: 403 }],
+  ['GET', '/admin/entries', undefined, { anon: 401, user: 403, moderator: 403, admin: 200, demo: 403, demo_admin: 200 }],
+  ['GET', '/admin/entries.csv', undefined, { anon: 401, user: 403, moderator: 403, admin: 200, demo: 403, demo_admin: 200 }],
+  ['POST', '/admin/entries/bulk', { action: 'delete', ids: ['none'] }, { anon: 401, user: 403, moderator: 403, admin: 200, demo: 403, demo_admin: 200 }],
+]);
+
+describe('storage, backups and the audit list', () => runMatrix(STORAGE_ROWS));
