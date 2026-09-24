@@ -21,6 +21,12 @@ try {
 }
 
 const log = createLogger(config);
+if (config.testNow) {
+  // Deterministic calendar time for visual tests (NODE_ENV=test only).
+  const { clock } = await import('../shared/rules/time.js');
+  const offset = config.testNow - Date.now();
+  clock.now = () => Date.now() + offset;
+}
 const app = await createApp(config, log);
 const http = createHttpApp(app);
 benchmarkHashing(log).catch(() => {});

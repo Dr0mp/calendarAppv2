@@ -964,4 +964,28 @@
     gap: var(--space-3);
     align-items: center;
   }
+
+  /* Quick-create side panel over the calendar */
+  .quick-panel .dialog-body {
+    padding-block-end: 0;
+  }
+
+  .schedule--embedded {
+    & .schedule-grid {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    & .schedule-aside {
+      display: none;
+    }
+
+    & .action-bar {
+      margin-inline: calc(var(--space-5) * -1);
+      padding-inline: var(--space-5);
+    }
+
+    & .schedule-spacer {
+      block-size: 0;
+    }
+  }
 }

@@ -7,10 +7,11 @@ export const chrome = signal(/** @type {{title: string, action?: any}} */ ({ tit
 /**
  * Set the page title (document and phone top bar) and its one contextual
  * action. The action is read when the title changes, so pass a stable vnode.
- * @param {string} title @param {any} [action]
+ * @param {string} title @param {any} [action] @param {boolean} [skip] embedded pages leave the chrome alone
  */
-export function usePageChrome(title, action) {
+export function usePageChrome(title, action, skip = false) {
   useEffect(() => {
+    if (skip) return;
     chrome.value = { title, action };
     document.title = title ? `${title} · Casa Artis` : 'Casa Artis';
   }, [title]);

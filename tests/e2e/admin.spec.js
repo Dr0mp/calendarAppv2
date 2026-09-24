@@ -1,5 +1,4 @@
-import { test, expect } from '@playwright/test';
-import { signIn, ensureUser, expectPhoneLayout } from './helpers.js';
+import { test, expect, signIn, ensureUser, expectPhoneLayout } from './helpers.js';
 
 const PW = 'o parolă lungă și sigură';
 

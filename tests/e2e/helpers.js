@@ -1,4 +1,6 @@
-import { expect } from '@playwright/test';
+import { test as base, expect } from '@playwright/test';
+
+export { expect };
 
 export const TOKEN = 'e2e-token';
 export const BASE = `http://localhost:${process.env.E2E_PORT ?? 3210}`;
@@ -82,8 +84,27 @@ export async function fakeImages(page) {
   await page.route('https://img.test/**', (route) => route.fulfill({ path: 'public/sample/cover-16x9.webp', contentType: 'image/webp' }));
 }
 
-/** YYYY-MM-DD `n` days from today in Bucharest. @param {number} n */
+/** The server's frozen "now" for tests (see tests/e2e/server.mjs). */
+export const FROZEN_NOW = Date.parse(process.env.TEST_NOW ?? '2026-09-24T07:00:00Z');
+
+/** Freeze the browser clock at the server's test time (advancing). @param {import('@playwright/test').Page} page */
+export async function freezeClock(page) {
+  await page.clock.install({ time: FROZEN_NOW });
+}
+
+/** YYYY-MM-DD `n` days from the test "today" in Bucharest. @param {number} n */
 export function dayFromToday(n) {
-  const now = new Date(Date.now() + n * 86_400_000);
+  const now = new Date(FROZEN_NOW + n * 86_400_000);
   return new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Bucharest' }).format(now);
 }
+
+/**
+ * `test` with every page's clock frozen at the server's test time, so the
+ * browser and server agree on "today" whatever the real date is.
+ */
+export const test = base.extend({
+  page: async ({ page }, use) => {
+    await page.clock.install({ time: FROZEN_NOW });
+    await use(page);
+  },
+});

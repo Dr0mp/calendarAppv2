@@ -32,6 +32,8 @@ const EnvSchema = z.object({
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent']).default('info'),
   HIBP_CHECK: bool.default(true),
   TEST_RESET_TOKEN: z.string().default(''),
+  /** Tests only: the calendar clock starts at this instant (ISO) and advances in real time. */
+  TEST_NOW: z.string().default(''),
 });
 
 /**
@@ -91,6 +93,7 @@ export function loadConfig(env = process.env) {
     logLevel: c.LOG_LEVEL,
     hibpCheck: c.HIBP_CHECK,
     testResetToken: c.TEST_RESET_TOKEN,
+    testNow: c.NODE_ENV === 'test' && c.TEST_NOW ? Date.parse(c.TEST_NOW) : null,
     version: '2.0.0',
   };
 }

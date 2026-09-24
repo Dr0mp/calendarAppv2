@@ -34,10 +34,18 @@ const SECTION_KEYS = {
   publishing: 'schedule.secPublishing',
 };
 
-export default function Schedule() {
+/**
+ * The scheduling form page (/schedule, /entries/:id/edit). With `embedded`,
+ * it renders inside the calendar's quick-create side panel instead.
+ * @param {{embedded?: {date: string, time?: string, space?: string, onClose: () => void, onSaved: (e: any) => void}}} [props]
+ */
+export default function Schedule(props = {}) {
   const { params } = useRoute();
-  const { query, route } = useLocation();
-  const editId = params.id ?? null;
+  const loc = useLocation();
+  const { route } = loc;
+  const embedded = props.embedded ?? null;
+  const query = embedded ? { date: embedded.date, time: embedded.time, space: embedded.space } : loc.query;
+  const editId = embedded ? null : params.id ?? null;
   const [loaded, setLoaded] = useState(false);
   const [entry, setEntry] = useState(/** @type {any} */ (null));
   const [initial, setInitial] = useState(/** @type {import('./model.js').FormState|null} */ (null));
@@ -47,7 +55,7 @@ export default function Schedule() {
   const u = /** @type {any} */ (user.value);
   const draftKey = `draft.${u.id}.${editId ?? 'new'}`;
 
-  usePageChrome(editId ? t('schedule.editTitle') : t('schedule.title'));
+  usePageChrome(editId ? t('schedule.editTitle') : t('schedule.title'), undefined, !!embedded);
 
   useEffect(() => {
     let live = true;
@@ -100,6 +108,7 @@ export default function Schedule() {
   }
   if (!loaded || !form || !initial) return html`<${SkeletonList} rows=${6} />`;
   return html`<${EntryForm} key=${editId ?? 'new'} entry=${entry} initial=${initial} form=${form} setForm=${setForm} draftKey=${draftKey}
+    embedded=${embedded}
     draftRestored=${draftRestored} onDiscardDraft=${() => {
       store.set(draftKey, null);
       setForm(initial);
@@ -109,7 +118,8 @@ export default function Schedule() {
       store.set(draftKey, null);
       invalidateEntries();
       refreshCounts();
-      route(`/calendar?view=day&date=${saved.first_date}&entry=${saved.id}`);
+      if (embedded) embedded.onSaved(saved);
+      else route(`/calendar?view=day&date=${saved.first_date}&entry=${saved.id}`);
     }} />`;
 }
 
@@ -156,9 +166,10 @@ async function duplicateDates(base) {
 
 /**
  * @param {{entry: any, initial: import('./model.js').FormState, form: import('./model.js').FormState,
- *   setForm: (f: any) => void, draftKey: string, draftRestored: boolean, onDiscardDraft: () => void, onSaved: (e: any) => void}} p
+ *   setForm: (f: any) => void, draftKey: string, draftRestored: boolean, onDiscardDraft: () => void, onSaved: (e: any) => void,
+ *   embedded: any}} p
  */
-function EntryForm({ entry, initial, form, setForm, draftKey, draftRestored, onDiscardDraft, onSaved }) {
+function EntryForm({ entry, initial, form, setForm, draftKey, draftRestored, onDiscardDraft, onSaved, embedded }) {
   const { route } = useLocation();
   const staff = isStaff.value;
   const admin = isAdmin.value;
@@ -370,7 +381,8 @@ function EntryForm({ entry, initial, form, setForm, draftKey, draftRestored, onD
       if (!ok) return;
     }
     saving.current = true;
-    history.length > 1 ? history.back() : route('/calendar');
+    if (embedded) embedded.onClose();
+    else history.length > 1 ? history.back() : route('/calendar');
   }
 
   /** @param {boolean} on */
@@ -412,10 +424,10 @@ function EntryForm({ entry, initial, form, setForm, draftKey, draftRestored, onD
     s === 'publishing' ? isEvent : true,
   );
 
-  return html`<div class="schedule">
-    <div class="page-head">
+  return html`<div class=${`schedule ${embedded ? 'schedule--embedded' : ''}`}>
+    ${!embedded && html`<div class="page-head">
       <h1>${entry ? t('schedule.editTitle') : t('schedule.title')}</h1>
-    </div>
+    </div>`}
     <div class="schedule-grid">
       <form class="schedule-form stack" onSubmit=${(/** @type {Event} */ e) => (e.preventDefault(), save())} noValidate>
         ${draftRestored && html`<${Alert} tone="info"><span>${t('schedule.draftRestored')} <button type="button" class="link-btn" onClick=${onDiscardDraft}>${t('schedule.discardDraft')}</button></span></${Alert}>`}

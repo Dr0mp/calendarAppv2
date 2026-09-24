@@ -13,6 +13,7 @@ Object.assign(process.env, {
   HIBP_CHECK: '0',
   LOG_LEVEL: 'warn',
   TEST_RESET_TOKEN: 'e2e-token',
+  TEST_NOW: process.env.TEST_NOW ?? '2026-09-24T07:00:00Z',
 });
 process.on('exit', () => fs.rmSync(dir, { recursive: true, force: true }));
 await import('../../server/index.js');
