@@ -77,11 +77,11 @@ settingsRoutes.post('/settings/test-email', async (c) => {
   return c.json({ ok: true, to: u.email });
 });
 
-settingsRoutes.post('/settings/demo-reset', (c) => {
+settingsRoutes.post('/settings/demo-reset', async (c) => {
   requireAdmin(c);
   const app = c.get('app');
   if (!app.config.demoEnabled) throw new ApiError(400, 'demo_disabled');
-  app.resetDemo();
+  await app.resetDemo();
   return c.json({ ok: true });
 });
 

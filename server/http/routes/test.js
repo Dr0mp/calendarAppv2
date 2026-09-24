@@ -21,8 +21,8 @@ testRoutes.use('/test/*', async (c, next) => {
 
 testRoutes.get('/test/outbox', (c) => c.json({ items: c.get('app').mailer.outbox ?? [] }));
 
-testRoutes.post('/test/reset-demo', (c) => {
-  c.get('app').resetDemo();
+testRoutes.post('/test/reset-demo', async (c) => {
+  await c.get('app').resetDemo();
   return c.json({ ok: true });
 });
 

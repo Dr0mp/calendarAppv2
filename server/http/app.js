@@ -115,7 +115,9 @@ export function createHttpApp(app) {
   /** @type {Hono<Env>} */
   const api = new Hono();
 
-  api.use('*', bodyLimit({ maxSize: 2 * 1024 * 1024, onError: () => { throw new ApiError(413, 'too_large', 'Body too large'); } }));
+  // JSON bodies are small; media uploads stream with their own limit.
+  const jsonLimit = bodyLimit({ maxSize: 2 * 1024 * 1024, onError: () => { throw new ApiError(413, 'too_large', 'Body too large'); } });
+  api.use('*', (c, next) => (c.req.method === 'POST' && c.req.path === '/api/v1/media' ? next() : jsonLimit(c, next)));
 
   // CSRF: Origin check on every mutating request, plus the session's token when signed in.
   api.use('*', async (c, next) => {

@@ -115,3 +115,12 @@ describe('entries', () => {
   });
 });
 describe('venues, users and settings', () => runMatrix(ADMIN_ROWS));
+
+export const MEDIA_ROWS = /** @type {Row[]} */ ([
+  ['GET', '/api/v1/media', undefined, { anon: 401, user: 200, moderator: 200, admin: 200, demo: 200, demo_admin: 200 }],
+  ['GET', '/api/v1/media/sample-cover', undefined, { anon: 401, user: 404, moderator: 404, admin: 404, demo: 200, demo_admin: 200 }],
+  ['GET', '/api/v1/media/nope', undefined, { anon: 401, user: 404, moderator: 404, admin: 404, demo: 404, demo_admin: 404 }],
+  ['POST', '/api/v1/media/nope/crop', { x: 0, y: 0, w: 16, h: 9 }, { anon: 401, user: 404, moderator: 404, admin: 404, demo: 404, demo_admin: 404 }],
+]);
+
+describe('media', () => runMatrix(MEDIA_ROWS));

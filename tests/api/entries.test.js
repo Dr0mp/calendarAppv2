@@ -297,7 +297,7 @@ describe('demo isolation (flow 10, entries)', () => {
     const owners = new Set(seeded.map((/** @type {any} */ e) => e.owner.name));
     assert.ok(![...owners].includes('e.user'));
 
-    t.app.resetDemo();
+    await t.app.resetDemo();
     const after = (await demo.get(`/entries?from=${from}&to=${to}`)).data.items;
     assert.equal(after.length, seeded.length);
     assert.ok(!after.some((/** @type {any} */ e) => e.title === 'Demo nou'));

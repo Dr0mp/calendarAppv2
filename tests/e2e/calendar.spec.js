@@ -1,18 +1,4 @@
-import { test, expect, testApi, apiInPage, dayFromToday, expectPhoneLayout, fakeImages } from './helpers.js';
-
-/** Sign in as the demo admin on a freshly reset demo workspace. @param {import('@playwright/test').Page} page */
-async function demoAdmin(page, request, locale = 'ro') {
-  await testApi(request, 'POST', 'reset-demo');
-  await page.goto('/login');
-  await page.getByRole('button', { name: /Demo Administrator/ }).click();
-  await expect(page).toHaveURL(/calendar/);
-  // The demo account is shared by tests: pin its language.
-  const me = await apiInPage(page, 'GET', '/me');
-  if (me.data.locale !== locale) {
-    await apiInPage(page, 'PATCH', '/me', { locale, theme: 'system' }, me.data.version);
-    await page.reload();
-  }
-}
+import { test, expect, apiInPage, demoAdmin, dayFromToday, expectPhoneLayout, fakeImages } from './helpers.js';
 
 const TODAY = dayFromToday(0);
 

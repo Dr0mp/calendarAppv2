@@ -1,6 +1,7 @@
 import { html, useEffect, useState } from '../../html.js';
 import { t } from '../../i18n/index.js';
 import { Badge, Button, Icon } from '../../components/ui.js';
+import { CropDialog, DropZone, MediaPicker, UploadList, uploadFiles } from '../../components/media-picker.js';
 
 export const RATIO_MIN = 1.7;
 export const RATIO_MAX = 1.85;
@@ -42,14 +43,17 @@ export function checkImage(src) {
 }
 
 /**
- * Section F cover picker: paste an https URL (uploads and the library arrive
- * with media support). Shows a preview and a badge.
+ * Section F cover picker (§5.6): upload, the media library, or an https URL.
+ * Shows a preview and a badge, and offers a 16:9 crop for uploaded images.
  * @param {{url: string, mediaId: string|null, onChange: (p: {cover_url?: string, cover_media_id?: string|null}) => void,
  *   onCheck: (c: CoverCheck) => void, check: CoverCheck, error?: string|null, extra?: any}} p
  */
 export function CoverPicker({ url, mediaId, onChange, onCheck, check, error, extra }) {
   const src = mediaId ? `/media/${mediaId}/original` : url.trim();
   const [draft, setDraft] = useState(url);
+  const [uploads, setUploads] = useState(/** @type {import('../../components/media-picker.js').UploadItem[]} */ ([]));
+  const [libOpen, setLibOpen] = useState(false);
+  const [cropOpen, setCropOpen] = useState(false);
   useEffect(() => setDraft(url), [url]);
   useEffect(() => {
     if (!src || (!mediaId && !/^https:\/\//.test(src))) {
@@ -64,6 +68,17 @@ export function CoverPicker({ url, mediaId, onChange, onCheck, check, error, ext
     };
   }, [src]);
 
+  /** @param {any} m */
+  const useMedia = (m) => onChange({ cover_media_id: m.id, cover_url: '' });
+  /** @param {File[]} files */
+  const onFiles = async (files) => {
+    const [m] = await uploadFiles(files.slice(0, 1), setUploads);
+    if (m) {
+      useMedia(m);
+      setUploads([]);
+    }
+  };
+
   return html`<div class="cover-picker stack" style=${{ '--stack-gap': 'var(--space-3)' }}>
     <div class="cover-preview" data-status=${check.status}>
       ${src && check.status !== 'error'
@@ -74,7 +89,15 @@ export function CoverPicker({ url, mediaId, onChange, onCheck, check, error, ext
       ${check.status === 'error' && src && html`<${Badge} tone="danger" icon="circle-alert" class="cover-badge">${t('schedule.coverLoadError')}</${Badge}>`}
     </div>
     ${check.status === 'ok' && check.small && html`<p class="small text-warning"><${Icon} name="triangle-alert" /> ${t('schedule.coverSmall')}</p>`}
-    ${check.status === 'bad' && html`<p class="small text-danger">${t('schedule.coverWrongShape')}</p>`}
+    ${check.status === 'bad' && html`<div class="cluster">
+      <p class="small text-danger">${t('schedule.coverWrongShape')}</p>
+      ${mediaId && html`<${Button} size="sm" icon="crop" onClick=${() => setCropOpen(true)}>${t('media.cropTo169')}</${Button}>`}
+    </div>`}
+    <div class="cover-sources">
+      <${DropZone} kind="image" compact onFiles=${onFiles} id="f-cover-file" />
+      <${Button} icon="images" onClick=${() => setLibOpen(true)}>${t('media.fromLibrary')}</${Button}>
+    </div>
+    <${UploadList} items=${uploads} />
     <div class="cluster">
       <input id="f-cover" class="input grow" type="url" inputMode="url" placeholder="https://…" value=${draft}
         aria-label=${t('schedule.coverUrl')} aria-invalid=${error ? 'true' : undefined}
@@ -84,5 +107,9 @@ export function CoverPicker({ url, mediaId, onChange, onCheck, check, error, ext
     </div>
     ${extra}
     ${error && html`<div class="field-error"><${Icon} name="circle-alert" />${error}</div>`}
+    <${MediaPicker} open=${libOpen} onClose=${() => setLibOpen(false)} kind="image" initialTab="library" title=${t('media.pickCover')}
+      onPick=${(/** @type {any[]} */ items) => items[0] && useMedia(items[0])} />
+    ${mediaId && check.w && html`<${CropDialog} open=${cropOpen} onClose=${() => setCropOpen(false)} onDone=${useMedia}
+      media=${{ id: mediaId, url: src, width: check.w, height: check.h }} />`}
   </div>`;
 }

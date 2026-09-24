@@ -240,7 +240,10 @@
     "invalid_rule": "The repeat rule isn't valid.",
     "recurrence_multiday": "Repeats aren't available for multi-day entries.",
     "rule_no_dates": "The rule produces no dates.",
-    "series_not_found": "Series not found."
+    "series_not_found": "Series not found.",
+    "unsupported_media": "This file type isn't supported.",
+    "empty_upload": "The file is empty.",
+    "storage_full": "Storage is full. Delete old media or ask an admin to free up space."
   },
   "styleguide": {
     "title": "Style guide",
@@ -652,5 +655,30 @@
     "deletedN": "{n, plural, one {One session deleted} other {# sessions deleted}}.",
     "conflictDates": "Conflicts on: {dates}. Skip those dates or pick another time.",
     "seeAll": "See all sessions in the series"
+  },
+  "media": {
+    "pickTitle": "Choose media",
+    "pickCover": "Choose a cover image",
+    "source": "Source",
+    "upload": "Upload",
+    "library": "Library",
+    "chooseFile": "Choose a file",
+    "orDrop": "or drop it here",
+    "limitsImage": "JPEG, PNG, WebP, GIF or AVIF",
+    "limitsVideo": "MP4, MOV or WebM",
+    "limitsAny": "Images or videos",
+    "uploading": "Uploading {name}",
+    "search": "Search by file name",
+    "mineOnly": "Only my uploads",
+    "emptyTitle": "No media yet",
+    "emptyText": "Files you upload appear here.",
+    "useN": "{n, plural, one {Use # file} other {Use # files}}",
+    "fromLibrary": "From library",
+    "cropTo169": "Crop to 16:9",
+    "cropTitle": "Crop to 16:9",
+    "cropHelp": "Drag the frame (or use the arrow keys) to choose the part to keep. The original stays unchanged.",
+    "cropFrame": "Crop frame",
+    "cropSize": "Frame size",
+    "cropSave": "Crop and use"
   }
 }

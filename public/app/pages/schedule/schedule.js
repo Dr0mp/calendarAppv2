@@ -329,6 +329,15 @@ function EntryForm({ entry, initial, form, setForm, draftKey, draftRestored, onD
     }
   }
 
+  async function useSampleCover() {
+    try {
+      const m = await api('GET', '/media/sample-cover');
+      set({ cover_media_id: m.id, cover_url: '' });
+    } catch {
+      toast('danger', t('errors.generic'));
+    }
+  }
+
   async function save() {
     const { payload, errs } = validate();
     setErrors(errs);
@@ -513,7 +522,7 @@ function EntryForm({ entry, initial, form, setForm, draftKey, draftRestored, onD
             <p class="field-hint">${t('schedule.coverHint')}</p>
             <${CoverPicker} url=${form.cover_url} mediaId=${form.cover_media_id} check=${coverCheck} onCheck=${setCoverCheck}
               error=${errors.cover ? t(`errors.${errors.cover}`) : null} onChange=${(/** @type {any} */ p) => set(p)}
-              extra=${isDemo.value && html`<div><${Button} size="sm" icon="image" onClick=${() => set({ cover_url: `${location.origin}/sample/cover-16x9.webp`, cover_media_id: null })}>
+              extra=${isDemo.value && html`<div><${Button} size="sm" icon="image" onClick=${useSampleCover}>
                 ${t('schedule.useSample')}</${Button}></div>`} />
           </div>
         </div>`)}

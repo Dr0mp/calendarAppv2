@@ -240,7 +240,10 @@
     "invalid_rule": "Regula de repetare nu este validă.",
     "recurrence_multiday": "Repetarea nu este disponibilă pentru evenimentele pe mai multe zile.",
     "rule_no_dates": "Regula nu produce nicio dată.",
-    "series_not_found": "Seria nu există."
+    "series_not_found": "Seria nu există.",
+    "unsupported_media": "Tipul acesta de fișier nu este acceptat.",
+    "empty_upload": "Fișierul este gol.",
+    "storage_full": "Spațiul de stocare este plin. Șterge fișiere vechi sau cere unui admin să elibereze spațiu."
   },
   "styleguide": {
     "title": "Ghid de stil",
@@ -652,5 +655,30 @@
     "deletedN": "{n, plural, one {O sesiune ștearsă} few {# sesiuni șterse} other {# de sesiuni șterse}}.",
     "conflictDates": "Suprapuneri la datele: {dates}. Săriți aceste date sau alegeți altă oră.",
     "seeAll": "Vezi toate sesiunile seriei"
+  },
+  "media": {
+    "pickTitle": "Alege media",
+    "pickCover": "Alege imaginea de copertă",
+    "source": "Sursă",
+    "upload": "Încarcă",
+    "library": "Bibliotecă",
+    "chooseFile": "Alege un fișier",
+    "orDrop": "sau trage-l aici",
+    "limitsImage": "JPEG, PNG, WebP, GIF sau AVIF",
+    "limitsVideo": "MP4, MOV sau WebM",
+    "limitsAny": "Imagini sau video",
+    "uploading": "Se încarcă {name}",
+    "search": "Caută după numele fișierului",
+    "mineOnly": "Doar încărcările mele",
+    "emptyTitle": "Încă nu există fișiere",
+    "emptyText": "Fișierele încărcate apar aici.",
+    "useN": "{n, plural, one {Folosește # fișier} few {Folosește # fișiere} other {Folosește # de fișiere}}",
+    "fromLibrary": "Din bibliotecă",
+    "cropTo169": "Decupează la 16:9",
+    "cropTitle": "Decupează la 16:9",
+    "cropHelp": "Trage cadrul (sau folosește săgețile) ca să alegi partea păstrată. Originalul rămâne neschimbat.",
+    "cropFrame": "Cadru de decupare",
+    "cropSize": "Mărimea cadrului",
+    "cropSave": "Decupează și folosește"
   }
 }

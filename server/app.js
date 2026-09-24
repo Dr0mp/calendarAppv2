@@ -5,6 +5,7 @@ import { createMailer } from './auth/email.js';
 import { getSetting } from './services/settings.js';
 import { bootstrapAccounts } from './services/bootstrap.js';
 import { seedWorkspace } from './seed/seed.js';
+import { importSeedMedia } from './services/media.js';
 
 /**
  * @typedef {{
@@ -22,7 +23,7 @@ import { seedWorkspace } from './seed/seed.js';
  *   mailer: import('./auth/email.js').Mailer,
  *   shell?: {html: string, scriptHash: string, cdnHost: string},
  *   setupLink?: string|null,
- *   resetDemo: () => void,
+ *   resetDemo: () => Promise<void>,
  *   close: () => void,
  * }} App
  */
@@ -70,11 +71,12 @@ export async function createApp(config, log) {
     authDb,
     workspaces: { main, demo },
     mailer: createMailer(config, log),
-    resetDemo() {
+    async resetDemo() {
       app.workspaces.demo.db.close();
       removeWorkspaceFiles(config, 'demo');
       app.workspaces.demo = makeWorkspace(config, 'demo');
       seedWorkspace(app, app.workspaces.demo);
+      await importSeedMedia(app, app.workspaces.demo);
       log.info('demo workspace reset');
     },
     close() {
@@ -93,6 +95,8 @@ export async function createApp(config, log) {
   }
   seedWorkspace(app, main);
   seedWorkspace(app, app.workspaces.demo);
+  await importSeedMedia(app, main);
+  await importSeedMedia(app, app.workspaces.demo);
   return app;
 }
 
