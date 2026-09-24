@@ -10,22 +10,18 @@
     <title>Casa Artis</title>
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="preload" href="/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin />
-    <link rel="stylesheet" href="/styles/tokens.css" />
-    <link rel="stylesheet" href="/styles/base.css" />
-    <link rel="stylesheet" href="/styles/layout.css" />
-    <link rel="stylesheet" href="/styles/components.css" />
-    <link rel="stylesheet" href="/styles/pages.css" />
-    <link rel="stylesheet" href="/styles/calendar.css" />
-    <link rel="stylesheet" href="/styles/social.css" />
-    <link rel="stylesheet" href="/styles/utilities.css" />
+    <link rel="stylesheet" href="/styles/app.css" />
     <!--IMPORTMAP-->
-    <link rel="modulepreload" href="/app/main.js" />
-    <link rel="modulepreload" href="/app/boot.js" />
-    <link rel="modulepreload" href="/app/api.js" />
-    <link rel="modulepreload" href="/app/i18n/format.js" />
+    <!--PRELOADS-->
     <script type="module" src="/app/main.js"></script>
   </head>
   <body>
-    <div id="app"><div class="page-loading"><div class="spinner" role="status" aria-label="…"></div></div></div>
+    <div id="app">
+      <div class="page-loading boot-screen">
+        <span class="brand-mark" aria-hidden="true">CA</span>
+        <p class="boot-name">Casa Artis</p>
+        <div class="spinner" role="status" aria-label="…"></div>
+      </div>
+    </div>
   </body>
 </html>

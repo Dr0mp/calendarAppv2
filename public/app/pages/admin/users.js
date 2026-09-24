@@ -111,7 +111,7 @@ export default function Users() {
     { key: 'status', label: t('admin.colStatus'), sort: (/** @type {any} */ u) => u.status, render: (/** @type {any} */ u) => html`<${Badge} tone=${{ active: 'success', invited: 'warning', disabled: 'neutral' }[u.status]}>${t(`admin.status_${u.status}`)}</${Badge}>` },
     { key: 'passkeys', label: t('admin.colPasskeys'), sort: (/** @type {any} */ u) => u.passkeys, render: (/** @type {any} */ u) => html`<span class="num">${u.passkeys}</span>` },
     { key: 'upcoming', label: t('admin.colUpcoming'), sort: (/** @type {any} */ u) => u.upcoming, render: (/** @type {any} */ u) => html`<span class="num">${u.upcoming}</span>` },
-    { key: 'lastLoginAt', label: t('admin.colLastLogin'), class: 'cell-nowrap', sort: (/** @type {any} */ u) => u.lastLoginAt ?? '', render: (/** @type {any} */ u) => (u.lastLoginAt ? fmtInstant(u.lastLoginAt) : t('common.never')) },
+    { key: 'lastLoginAt', label: t('admin.colLastLogin'), class: 'cell-nowrap', sort: (/** @type {any} */ u) => u.lastLoginAt ?? '', render: (/** @type {any} */ u) => (u.lastLoginAt ? fmtInstant(u.lastLoginAt) : html`${t('common.never')}${u.legacyPassword ? html` <${Badge} tone="warning">${t('admin.legacyPassword')}</${Badge}>` : ''}`) },
     { key: 'createdAt', label: t('admin.colCreated'), class: 'cell-nowrap', sort: (/** @type {any} */ u) => u.createdAt, render: (/** @type {any} */ u) => fmtDate(u.createdAt.slice(0, 10)) },
     {
       key: 'actions', label: t('common.actions'), actions: true,

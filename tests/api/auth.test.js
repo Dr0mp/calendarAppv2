@@ -25,7 +25,60 @@ describe('platform', () => {
     assert.equal(page.headers.get('cross-origin-opener-policy'), 'same-origin');
     const html = await page.text();
     assert.match(html, /<script type="importmap">/);
-    assert.equal((html.match(/<script(?![^>]*type="(module|importmap)")/g) ?? []).length, 0, 'no other inline script');
+    // Only the import map (hashed in the CSP), the module entry and a JSON data block (not executable).
+    assert.equal((html.match(/<script(?![^>]*type="(module|importmap|application\/json)")/g) ?? []).length, 0, 'no other inline script');
+  });
+
+  test('the page embeds the session and preloads the modules of the route', async () => {
+    const html = await (await t.http.request('/calendar')).text();
+    const data = JSON.parse(html.match(/<script type="application\/json" id="session-data">(.*?)<\/script>/s)?.[1] ?? 'null');
+    assert.equal(data.user, null);
+    assert.equal(data.settings.tz, 'Europe/Bucharest');
+    for (const m of ['/app/main.js', '/app/shell.js', '/app/pages/calendar/calendar.js', '/shared/rules/time.js']) {
+      assert.ok(html.includes(`<link rel="modulepreload" href="${m}" />`), m);
+    }
+    assert.ok(!html.includes('/app/pages/schedule/schedule.js'), 'only this route');
+    assert.match(html, /<link rel="preload" href="\/app\/i18n\/ro\.json" as="fetch" crossorigin \/>/);
+    const schedule = await (await t.http.request('/schedule')).text();
+    assert.ok(schedule.includes('/app/pages/schedule/schedule.js'));
+    assert.ok(!schedule.includes('"/shared/schemas/entry.js"'), 'Zod loads after the first paint');
+  });
+
+  test('static text is compressed, and each file keeps its own bytes', async () => {
+    const zlib = await import('node:zlib');
+    const fs = await import('node:fs');
+    const get = (/** @type {string} */ p, /** @type {string} */ enc) => t.http.request(p, { headers: { 'accept-encoding': enc } });
+    for (const p of ['/app/components/ui.js', '/app/shell.js', '/app/pages/calendar/calendar.js']) {
+      const r = await get(p, 'br, gzip');
+      assert.equal(r.headers.get('content-encoding'), 'br');
+      assert.equal(r.headers.get('vary'), 'Accept-Encoding');
+      const body = zlib.brotliDecompressSync(Buffer.from(await r.arrayBuffer())).toString('utf8');
+      assert.equal(body, fs.default.readFileSync(`public${p}`, 'utf8'), p);
+    }
+    // Two files with the same size and time (e.g. vendored locales) must never share a cache entry.
+    const [f1, f2] = ['public/app/__same-a.js', 'public/app/__same-b.js'];
+    try {
+      fs.default.writeFileSync(f1, `export const a = '${'a'.repeat(3000)}';\n`);
+      fs.default.writeFileSync(f2, `export const b = '${'b'.repeat(3000)}';\n`);
+      const when = new Date('2026-01-01T00:00:00Z');
+      fs.default.utimesSync(f1, when, when);
+      fs.default.utimesSync(f2, when, when);
+      for (const [f, ch] of [[f1, 'a'], [f2, 'b']]) {
+        const r = await get(`/${f.slice('public/'.length)}`, 'br');
+        assert.ok(zlib.brotliDecompressSync(Buffer.from(await r.arrayBuffer())).toString('utf8').includes(ch.repeat(100)), f);
+      }
+    } finally {
+      fs.default.rmSync(f1, { force: true });
+      fs.default.rmSync(f2, { force: true });
+    }
+    const gz = await get('/styles/app.css', 'gzip');
+    assert.equal(gz.headers.get('content-encoding'), 'gzip');
+    const css = zlib.gunzipSync(Buffer.from(await gz.arrayBuffer())).toString('utf8');
+    assert.ok(css.indexOf('@layer reset, tokens') < css.indexOf('/* utilities.css */'), 'tokens first, utilities last');
+    const plain = await get('/app/api.js', '');
+    assert.equal(plain.headers.get('content-encoding'), null);
+    const etag = plain.headers.get('etag') ?? '';
+    assert.equal((await t.http.request('/app/api.js', { headers: { 'if-none-match': etag } })).status, 304);
   });
 
   test('the import-map hash in the CSP matches the inline map', async () => {

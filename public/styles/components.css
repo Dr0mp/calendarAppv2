@@ -1528,6 +1528,32 @@
     min-block-size: 40vh;
   }
 
+  /* The static first paint in index.html, before the app starts. */
+  .boot-screen {
+    min-block-size: 100dvh;
+    align-content: center;
+    gap: var(--space-3);
+
+    & .brand-mark {
+      display: grid;
+      place-items: center;
+      inline-size: 48px;
+      block-size: 48px;
+      border-radius: 14px;
+      background: var(--accent);
+      color: var(--accent-contrast);
+      font-size: 20px;
+      font-weight: var(--weight-bold);
+    }
+
+    & .boot-name {
+      margin: 0;
+      font-size: var(--text-lg);
+      font-weight: var(--weight-semibold);
+      color: var(--text-strong);
+    }
+  }
+
   /* ================================================================
      Misc
      ================================================================ */

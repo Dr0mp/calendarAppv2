@@ -1,3 +1,4 @@
+import fs from 'node:fs';
 import path from 'node:path';
 import { z } from 'zod';
 
@@ -31,6 +32,9 @@ const EnvSchema = z.object({
   ASSETS: z.enum(['cdn', 'local']).default('cdn'),
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent']).default('info'),
   HIBP_CHECK: bool.default(true),
+  /** Optional built-in HTTPS (HTTP/2) when no reverse proxy terminates TLS. Both or neither. */
+  TLS_CERT_FILE: z.string().optional(),
+  TLS_KEY_FILE: z.string().optional(),
   TEST_RESET_TOKEN: z.string().default(''),
   /** Tests only: the calendar clock starts at this instant (ISO) and advances in real time. */
   TEST_NOW: z.string().default(''),
@@ -64,6 +68,12 @@ export function loadConfig(env = process.env) {
       throw new Error(`Invalid configuration:\n  APP_ORIGINS: "${o}" is not a URL`);
     }
   }
+  if (!!c.TLS_CERT_FILE !== !!c.TLS_KEY_FILE) {
+    throw new Error('Invalid configuration:\n  TLS_CERT_FILE and TLS_KEY_FILE must be set together.');
+  }
+  for (const f of [c.TLS_CERT_FILE, c.TLS_KEY_FILE]) {
+    if (f && !fs.existsSync(f)) throw new Error(`Invalid configuration:\n  TLS file not found: ${f}`);
+  }
   const dataDir = path.resolve(c.DATA_DIR);
   return {
     env: c.NODE_ENV,
@@ -92,6 +102,7 @@ export function loadConfig(env = process.env) {
     assets: c.ASSETS,
     logLevel: c.LOG_LEVEL,
     hibpCheck: c.HIBP_CHECK,
+    tls: c.TLS_CERT_FILE && c.TLS_KEY_FILE ? { cert: c.TLS_CERT_FILE, key: c.TLS_KEY_FILE } : null,
     testResetToken: c.TEST_RESET_TOKEN,
     testNow: c.NODE_ENV === 'test' && c.TEST_NOW ? Date.parse(c.TEST_NOW) : null,
     version: '2.0.0',

@@ -44,7 +44,9 @@ login page into a sandbox that is rebuilt on every start and nightly.
 | `npm run check:importmap` | CDN map, vendor list and package.json pin the same versions |
 | `npm test` | Unit (with coverage gate) and API tests (`node --test`) |
 | `npm run test:e2e` | Playwright (Chromium, WebKit, Firefox × desktop and phone) |
-| `npm run import-v1` | Import v1 data into a fresh v2 install |
+| `npm run import-v1` | Import v1 data into a fresh v2 install (`--dry-run` prints the report only) |
+| `npm run restore -- <backup.zip>` | Restore a backup (server stopped); signs everyone out |
+| `npm run lighthouse` | Lighthouse budgets for the calendar and the scheduling form (mobile, HTTP/2) |
 
 Locally, `E2E_BROWSERS=chromium npm run test:e2e` runs just Chromium.
 
@@ -55,7 +57,7 @@ server/   config, HTTP (Hono), auth, db (migrations + repos), services, jobs, se
 shared/   schemas/ (Zod) and rules/ (pure logic) — used by browser and server
 public/   index.html, app/ (Preact pages and components), styles/ (cascade layers), icons, fonts
 tests/    unit/, api/, e2e/
-docs/     rebuild-spec.md, deploy.md
+docs/     rebuild-spec.md, deploy.md (Linux/Caddy, Windows/NSSM, backups, v1 import)
 ```
 
 See [`docs/deploy.md`](docs/deploy.md) for Linux (systemd + Caddy) and Windows deployment,

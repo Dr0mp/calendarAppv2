@@ -8,7 +8,7 @@ import { startApp, Client } from './harness.js';
 import { addDays, todayIn } from '../../shared/rules/time.js';
 import { newId, isoNow } from '../../server/util.js';
 import { csvCell } from '../../server/services/admin-entries.js';
-import { pruneBackups, runNightlyBackup } from '../../server/services/backup.js';
+import { backupZip, pruneBackups, readZip, restoreBackup, runNightlyBackup } from '../../server/services/backup.js';
 
 /** @type {Awaited<ReturnType<typeof startApp>>} */
 let t;
@@ -212,6 +212,34 @@ describe('backups', () => {
     pruneBackups(t.app.config.backupDir);
     assert.ok(!fs.existsSync(old));
     assert.ok(fs.existsSync(file));
+  });
+});
+
+describe('restore', () => {
+  test('a backup restores into a data folder; sessions and tokens are purged', async () => {
+    const { stream, done } = backupZip(t.app);
+    /** @type {Buffer[]} */ const chunks = [];
+    for await (const c of /** @type {AsyncIterable<Buffer>} */ (/** @type {unknown} */ (stream))) chunks.push(c);
+    await done;
+    const zip = Buffer.concat(chunks);
+    const files = readZip(zip);
+    assert.ok(files.has('auth.db') && files.has('main.db') && files.has('backup.json'));
+    assert.ok([...files.keys()].some((k) => k.startsWith('media/originals/')));
+
+    const dir = fs.mkdtempSync(path.join(t.dataDir, 'restore-'));
+    fs.writeFileSync(path.join(dir, 'main.db'), 'old');
+    const r = restoreBackup(dir, zip);
+    assert.ok(r.restoredFiles >= 3);
+    assert.equal(fs.readFileSync(path.join(r.previous, 'main.db'), 'utf8'), 'old', 'the previous data is kept aside');
+    const auth = new DatabaseSync(path.join(dir, 'auth.db'), { readOnly: true });
+    assert.equal(/** @type {any} */ (auth.prepare('SELECT COUNT(*) AS n FROM sessions').get()).n, 0);
+    assert.ok(/** @type {any} */ (auth.prepare('SELECT COUNT(*) AS n FROM users').get()).n > 0);
+    auth.close();
+    const main = new DatabaseSync(path.join(dir, 'main.db'), { readOnly: true });
+    const m = /** @type {any} */ (main.prepare('SELECT path FROM media LIMIT 1').get());
+    main.close();
+    assert.ok(fs.existsSync(path.join(dir, 'media', 'main', m.path)), 'media files are back in place');
+    assert.throws(() => restoreBackup(dir, Buffer.from('not a zip')), /Not a zip/);
   });
 });
 

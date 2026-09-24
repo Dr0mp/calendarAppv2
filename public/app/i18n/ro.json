@@ -61,7 +61,9 @@
     "forbiddenText": "Pagina este disponibilă doar administratorilor.",
     "notFoundTitle": "Pagina nu există",
     "notFoundText": "Linkul poate fi greșit sau pagina a fost mutată.",
-    "backToCalendar": "Înapoi la calendar"
+    "backToCalendar": "Înapoi la calendar",
+    "passkeyInvite": "Cheile de acces din versiunea veche nu au putut fi mutate. Adăugați una nouă ca să vă autentificați fără parolă.",
+    "passkeyAdd": "Adaugă o cheie de acces"
   },
   "prefs": {
     "language": "Limbă",
@@ -498,7 +500,11 @@
     "toolHint_unreferenced": "Fișierele pe care nu le folosește nimic, fără să mai aștepte 24 de ore.",
     "tool_guest-names": "Șterge numele oaspeților",
     "toolHint_guest-names": "Pentru rezervările încheiate de mai mult timp (GDPR). Rezervările rămân.",
-    "filters": "Filtre"
+    "filters": "Filtre",
+    "migratedNeverTitle": "{n, plural, one {# cont migrat nu s-a autentificat încă} few {# conturi migrate nu s-au autentificat încă} other {# de conturi migrate nu s-au autentificat încă}}",
+    "migratedNeverText": "Au trecut 90 de zile de la import. Trimiteți acestor persoane un link de resetare a parolei din pagina Utilizatori.",
+    "openUsers": "Deschide Utilizatori",
+    "legacyPassword": "Parolă din versiunea veche"
   },
   "entryType": {
     "event": "Eveniment public",

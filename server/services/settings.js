@@ -18,6 +18,9 @@ export const DEFAULTS = {
   promo_template: DEFAULT_PROMO_TEMPLATE,
   last_promo_platform: '',
   seeded_at: '',
+  /** Set by import-v1: when, and which users had passkeys in v1. */
+  v1_imported_at: '',
+  v1_passkey_users: '[]',
 };
 
 /** @param {Db} db @param {keyof typeof DEFAULTS} key */

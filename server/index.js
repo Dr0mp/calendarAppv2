@@ -1,6 +1,8 @@
 // Temporal first: shared/rules use the global Temporal (Node 24 has none yet).
 import 'temporal-polyfill/global';
 import './warnings.js';
+import fs from 'node:fs';
+import http2 from 'node:http2';
 import { serve } from '@hono/node-server';
 import { loadConfig } from './config.js';
 import { createLogger } from './log.js';
@@ -10,7 +12,6 @@ import { startJobs } from './jobs/scheduler.js';
 import { benchmarkHashing } from './auth/passwords.js';
 import { cleanupMedia } from './services/media.js';
 import { runNightlyBackup } from './services/backup.js';
-
 
 let config;
 try {
@@ -40,8 +41,15 @@ const jobs = startJobs(app, {
   },
 });
 
-const server = serve({ fetch: http.fetch, port: config.port }, (info) => {
-  log.info({ port: info.port, url: config.appUrl, assets: config.assets }, 'Casa Artis Calendar is running');
+// HTTPS with HTTP/2 when TLS files are configured (no reverse proxy); plain HTTP otherwise.
+const tls = config.tls
+  ? {
+      createServer: http2.createSecureServer,
+      serverOptions: { cert: fs.readFileSync(config.tls.cert), key: fs.readFileSync(config.tls.key), allowHTTP1: true },
+    }
+  : {};
+const server = serve({ fetch: http.fetch, port: config.port, .../** @type {any} */ (tls) }, (info) => {
+  log.info({ port: info.port, url: config.appUrl, assets: config.assets, tls: !!config.tls }, 'Casa Artis Calendar is running');
 });
 
 function shutdown() {

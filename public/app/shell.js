@@ -1,4 +1,5 @@
 import { LocationProvider, Router, Route, ErrorBoundary, useLocation } from 'preact-iso';
+import { signal } from '@preact/signals';
 import { html, useEffect, useState } from './html.js';
 import { t, locale } from './i18n/index.js';
 import { session, user, isAdmin, isDemo, refreshSession } from './state/session.js';
@@ -65,6 +66,13 @@ export function afterLogin(next) {
   return '/calendar';
 }
 
+/** "Add a passkey" banner for users who had passkeys in v1; dismissed per browser. */
+const passkeyDismissed = signal(!!store.get('passkeyInviteDismissed'));
+function dismissPasskey() {
+  store.set('passkeyInviteDismissed', true);
+  passkeyDismissed.value = true;
+}
+
 function Shell() {
   const { path } = useLocation();
   const u = /** @type {NonNullable<typeof user.value>} */ (user.value);
@@ -104,6 +112,11 @@ function Shell() {
   return html`<div class="app">
     <a class="skip-link" href="#main">${t('nav.skipToContent')}</a>
     ${isDemo.value && html`<div class="demo-banner" role="note"><${Icon} name="sparkles" />${t('shell.demoBanner')}</div>`}
+    ${user.value?.passkeyInvite && !passkeyDismissed.value && html`<div class="banner passkey-banner" role="note">
+      <${Icon} name="fingerprint" /><span class="grow">${t('shell.passkeyInvite')}</span>
+      <a href="/account#passkeys">${t('shell.passkeyAdd')}</a>
+      <button type="button" class="btn btn--ghost btn--sm btn--icon" aria-label=${t('common.dismiss')} onClick=${dismissPasskey}><${Icon} name="x" /></button>
+    </div>`}
     <header class="topbar">
       <div class="topbar-inner">
         <a class="brand" href="/calendar" aria-label="Casa Artis">

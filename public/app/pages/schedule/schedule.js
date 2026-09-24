@@ -13,7 +13,6 @@ import { confirm } from '../../components/overlay.js';
 import { toast } from '../../components/toast.js';
 import { isCompact } from '../../components/media-query.js';
 import { defaultStart, fmtDateShort, today } from '../../time.js';
-import { EntryInput } from '/shared/schemas/entry.js';
 import { internalOverlaps, findRoomConflicts } from '/shared/rules/conflicts.js';
 import { isEntryPast } from '/shared/rules/permissions.js';
 import { orgTz } from '../../state/session.js';
@@ -24,6 +23,11 @@ import { CoverPicker } from './cover.js';
 import { RecurrenceSection, recurrenceSummary, toRecurrence } from './recurrence.js';
 
 const SECTIONS = ['type', 'details', 'datetime', 'recurrence', 'rooms', 'publishing'];
+
+/** The shared entry schema pulls in Zod; it loads after the first paint. */
+let schemaModule = /** @type {Promise<typeof import('/shared/schemas/entry.js')>|null} */ (null);
+const loadSchema = () => (schemaModule ??= import('/shared/schemas/entry.js'));
+
 /** @type {Record<string, string>} */
 const SECTION_KEYS = {
   type: 'schedule.secType',
@@ -195,6 +199,12 @@ function EntryForm({ entry, initial, form, setForm, draftKey, draftRestored, onD
 
   const dirty = JSON.stringify(form) !== JSON.stringify(initial);
 
+  // Fetch the validation schema once the form is on screen.
+  useEffect(() => {
+    const id = setTimeout(loadSchema, 1200);
+    return () => clearTimeout(id);
+  }, []);
+
   // Autosave the draft (per user) while editing.
   useEffect(() => {
     if (!dirty) return;
@@ -288,8 +298,8 @@ function EntryForm({ entry, initial, form, setForm, draftKey, draftRestored, onD
     setErrors({});
   }
 
-  /** Client validation with the shared schema, plus form-only checks. */
-  function validate() {
+  /** Client validation with the shared schema, plus form-only checks. @param {any} EntryInput */
+  function validate(EntryInput) {
     const payload = toPayload(form, { staff });
     /** @type {Record<string,string>} */ const errs = {};
     const r = EntryInput.safeParse(payload);
@@ -339,7 +349,8 @@ function EntryForm({ entry, initial, form, setForm, draftKey, draftRestored, onD
   }
 
   async function save() {
-    const { payload, errs } = validate();
+    const { EntryInput } = await loadSchema();
+    const { payload, errs } = validate(EntryInput);
     setErrors(errs);
     if (Object.keys(errs).length) {
       focusFirst(errs);

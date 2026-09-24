@@ -1,6 +1,7 @@
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
+import { preloadsFor } from './modgraph.js';
 
 const ROOT = path.resolve(import.meta.dirname, '../..');
 
@@ -25,7 +26,7 @@ export function buildShell(assets) {
   const hash = crypto.createHash('sha256').update(json).digest('base64');
   const template = fs.readFileSync(path.join(ROOT, 'public/index.html'), 'utf8');
   const html = template.replace('<!--IMPORTMAP-->', `<script type="importmap">${json}</script>`);
-  return { html, scriptHash: `'sha256-${hash}'`, cdnHost: assets === 'cdn' ? 'https://esm.sh' : '' };
+  return { html, map, scriptHash: `'sha256-${hash}'`, cdnHost: assets === 'cdn' ? 'https://esm.sh' : '' };
 }
 
 /**
@@ -50,12 +51,24 @@ export function contentSecurityPolicy(shell) {
 
 /**
  * Personalise the shell: <html lang> and data-theme from the signed-in user,
- * so the first paint uses the right theme without an inline script.
- * @param {string} html
+ * so the first paint uses the right theme without an inline script; plus
+ * preloads for the modules and the translations the first paint needs.
+ * @param {{html: string, map: {imports: Record<string, string>}}} shell
  * @param {{locale?: string|null, theme?: string|null}|null} prefs
+ * @param {string} [pathname]
+ * @param {unknown} [session] the /api/v1/session payload, embedded as JSON data (not script) to save a round trip
  */
-export function personalise(html, prefs) {
+export function personalise(shell, prefs, pathname = '/', session) {
   const lang = prefs?.locale === 'en' ? 'en' : 'ro';
   const theme = ['light', 'dark'].includes(prefs?.theme ?? '') ? prefs.theme : 'system';
-  return html.replace('<html lang="ro" data-theme="system">', `<html lang="${lang}" data-theme="${theme}">`);
+  const links = [
+    `<link rel="preload" href="/app/i18n/${lang}.json" as="fetch" crossorigin />`,
+    ...preloadsFor(pathname, shell.map).map((u) => `<link rel="modulepreload" href="${u}" />`),
+    ...(session === undefined
+      ? []
+      : [`<script type="application/json" id="session-data">${JSON.stringify(session).replace(/</g, '\\u003c').replace(/\u2028|\u2029/g, '')}</script>`]),
+  ].join('\n    ');
+  return shell.html
+    .replace('<html lang="ro" data-theme="system">', `<html lang="${lang}" data-theme="${theme}">`)
+    .replace('<!--PRELOADS-->', links);
 }

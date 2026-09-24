@@ -53,6 +53,7 @@ function adminView(c, u) {
     passkeys,
     upcoming,
     lastLoginAt: u.last_login_at,
+    legacyPassword: typeof u.password_hash === 'string' && u.password_hash.startsWith('legacy-bcrypt:'),
     createdAt: u.created_at,
     version: u.version,
   };

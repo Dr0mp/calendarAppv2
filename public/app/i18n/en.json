@@ -61,7 +61,9 @@
     "forbiddenText": "This page is available to administrators only.",
     "notFoundTitle": "Page not found",
     "notFoundText": "The link may be wrong, or the page has moved.",
-    "backToCalendar": "Back to the calendar"
+    "backToCalendar": "Back to the calendar",
+    "passkeyInvite": "Passkeys from the old version couldn't be moved. Add a new one to sign in without a password.",
+    "passkeyAdd": "Add a passkey"
   },
   "prefs": {
     "language": "Language",
@@ -498,7 +500,11 @@
     "toolHint_unreferenced": "Files nothing uses, without waiting the 24 hours.",
     "tool_guest-names": "Clear guest names",
     "toolHint_guest-names": "For bookings that ended long ago (GDPR). The bookings stay.",
-    "filters": "Filters"
+    "filters": "Filters",
+    "migratedNeverTitle": "{n, plural, one {# migrated account hasn't signed in yet} other {# migrated accounts haven't signed in yet}}",
+    "migratedNeverText": "It's been 90 days since the import. Send these people a password reset link from the Users page.",
+    "openUsers": "Open Users",
+    "legacyPassword": "Password from the old version"
   },
   "entryType": {
     "event": "Public event",

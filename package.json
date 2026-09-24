@@ -22,9 +22,11 @@
     "check:importmap": "node scripts/check-importmap.mjs",
     "test": "npm run test:unit && npm run test:api",
     "test:unit": "node --test --experimental-test-coverage --test-coverage-include='shared/**/*.js' --test-coverage-lines=90 --test-coverage-branches=80 \"tests/unit/**/*.test.js\"",
-    "test:api": "node --test --test-concurrency=4 \"tests/api/**/*.test.js\"",
+    "test:api": "node --test --test-concurrency=4 --experimental-test-coverage --test-coverage-include='server/services/**/*.js' --test-coverage-lines=90 \"tests/api/**/*.test.js\"",
     "test:e2e": "playwright test",
-    "import-v1": "node scripts/import-v1.mjs"
+    "import-v1": "node scripts/import-v1.mjs",
+    "restore": "node scripts/restore.mjs",
+    "lighthouse": "node scripts/lighthouse.mjs"
   },
   "dependencies": {
     "@hono/node-server": "2.1.1",
@@ -56,6 +58,7 @@
     "eslint": "10.11.0",
     "globals": "17.12.0",
     "htm": "3.1.1",
+    "lighthouse": "13.5.0",
     "lucide-static": "1.47.0",
     "preact": "10.29.8",
     "preact-iso": "2.12.2",

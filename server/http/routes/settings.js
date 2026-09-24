@@ -2,7 +2,7 @@ import { Hono } from 'hono';
 import { body, requireAdmin, requireNotDemo, wsOf } from '../app.js';
 import { ApiError, forbidden } from '../errors.js';
 import { SettingsPatch } from '../../../shared/schemas/settings.js';
-import { allSettings, DEFAULTS, setSetting } from '../../services/settings.js';
+import { allSettings, DEFAULTS, getSetting, setSetting } from '../../services/settings.js';
 import * as timeRules from '../../../shared/rules/time.js';
 import { isValidTimeZone, localToUtc } from '../../../shared/rules/time.js';
 import { composeMail } from '../../auth/email.js';
@@ -100,5 +100,13 @@ settingsRoutes.get('/admin/summary', (c) => {
   const pendingPromotions = /** @type {any} */ (
     ws.db.prepare("SELECT COUNT(*) AS n FROM entries WHERE type = 'event' AND promotion_status = 'pending' AND last_date >= ?").get(today)
   ).n;
-  return c.json({ activeUsers, upcomingWeek, pendingPromotions, storage: storageStatus(app, ws) });
+  // 90 days after a v1 import: migrated accounts that never signed in (send them reset links).
+  const importedAt = ws.name === 'main' ? getSetting(ws.db, 'v1_imported_at') : '';
+  const neverSignedIn =
+    importedAt && Date.now() - Date.parse(importedAt) >= 90 * 24 * 3600 * 1000
+      ? /** @type {any[]} */ (
+          app.authDb.prepare("SELECT id, name, username FROM users WHERE password_hash LIKE 'legacy-bcrypt:%' AND last_login_at IS NULL AND status = 'active' ORDER BY name").all()
+        ).map((u) => ({ id: u.id, name: u.name, username: u.username }))
+      : [];
+  return c.json({ activeUsers, upcomingWeek, pendingPromotions, storage: storageStatus(app, ws), migration: { importedAt: importedAt || null, neverSignedIn } });
 });

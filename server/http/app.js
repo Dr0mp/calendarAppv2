@@ -1,9 +1,11 @@
 import { Hono } from 'hono';
+import { compress } from 'hono/compress';
 import { bodyLimit } from 'hono/body-limit';
 import { getCookie } from 'hono/cookie';
 import { getConnInfo } from '@hono/node-server/conninfo';
 import { ApiError, forbidden, parse, tooMany, unauthorized } from './errors.js';
 import { buildShell, contentSecurityPolicy, personalise } from './html.js';
+import { sessionPayload } from './session.js';
 import { serveStatic } from './static.js';
 import { cookieName, deleteSession, loadSession } from '../auth/sessions.js';
 import { hit } from '../auth/ratelimit.js';
@@ -58,6 +60,8 @@ export function createHttpApp(app) {
 
   /** @type {Hono<Env>} */
   const h = new Hono();
+  // gzip for HTML and JSON; static assets arrive pre-compressed (brotli) and are skipped.
+  h.use('*', compress());
 
   // ---- Request context, logging and security headers ------------------
   h.use('*', async (c, next) => {
@@ -180,7 +184,7 @@ export function createHttpApp(app) {
     if (/\.[a-z0-9]+$/i.test(c.req.path)) return c.text('Not found', 404);
     const user = c.get('user');
     c.header('Cache-Control', 'no-store');
-    return c.html(personalise(shell.html, user));
+    return c.html(personalise(shell, user, c.req.path, sessionPayload(c)));
   });
 
   h.onError((err, c) => {

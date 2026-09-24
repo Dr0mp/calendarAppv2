@@ -10,7 +10,7 @@ import { Button, EmptyState, Icon, IconButton, SearchField, Segmented, Select } 
 import { isCompact } from '../../components/media-query.js';
 import { PlatformIcon } from '../../components/platform-icon.js';
 import { addDays, addMonths, fmtMonthYear, monthGrid, today } from '../../time.js';
-import { isValidDate } from '/shared/schemas/common.js';
+import { isValidDate } from '/shared/rules/validate.js';
 import { SOCIAL_VIEWS, SocialList, SocialMonth, SocialYear } from './views.js';
 import { PostOverlays } from './post-overlays.js';
 

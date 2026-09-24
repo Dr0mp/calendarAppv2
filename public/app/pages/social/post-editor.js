@@ -12,7 +12,7 @@ import { PlatformIcon } from '../../components/platform-icon.js';
 import { isCompact } from '../../components/media-query.js';
 import { addDays, fmtBytes, isPastMoment, nextFullHour, today } from '../../time.js';
 import { captionState, checkItem, checkList, kindOfUrl, maxItems, scheduleBlockers } from '/shared/rules/media-rules.js';
-import { isHttpsUrl, isShareLink } from '/shared/schemas/common.js';
+import { isHttpsUrl, isShareLink } from '/shared/rules/validate.js';
 import { testShareLink } from './views.js';
 import { StandardsCard } from './standards-card.js';
 

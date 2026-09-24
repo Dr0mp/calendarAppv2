@@ -53,8 +53,10 @@ export function sessionPayload(c) {
   const passkeys = user
     ? /** @type {any} */ (app.authDb.prepare('SELECT COUNT(*) AS n FROM passkeys WHERE user_id = ?').get(user.id)).n
     : 0;
+  // Users who had passkeys in v1 are invited to add a new one (v1 keys can't be migrated).
+  const passkeyInvite = !!user && !passkeys && !user.is_demo && (JSON.parse(s.v1_passkey_users || '[]')).includes(user.id);
   return {
-    user: user ? { ...selfView(user), passkeyCount: passkeys } : null,
+    user: user ? { ...selfView(user), passkeyCount: passkeys, passkeyInvite } : null,
     workspace: session ? session.workspace : null,
     csrfToken: session ? session.csrf_token : null,
     settings: { tz: s.tz, orgName: s.org_name, defaultLocale: s.default_locale },

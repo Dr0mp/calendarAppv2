@@ -21,7 +21,7 @@ import { importSeedMedia } from './services/media.js';
  *   authDb: import('./db/open.js').Db,
  *   workspaces: {main: Workspace, demo: Workspace},
  *   mailer: import('./auth/email.js').Mailer,
- *   shell?: {html: string, scriptHash: string, cdnHost: string},
+ *   shell?: {html: string, map: {imports: Record<string, string>}, scriptHash: string, cdnHost: string},
  *   setupLink?: string|null,
  *   fetchFavicon?: (domain: string) => Promise<Buffer|null>,
  *   resetDemo: () => Promise<void>,

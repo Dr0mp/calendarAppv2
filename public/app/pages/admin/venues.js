@@ -5,7 +5,7 @@ import { Badge, Button, ColorPicker, EmptyState, Field, IconButton, Input, Skele
 import { Modal, confirm } from '../../components/overlay.js';
 import { SortableList } from '../../components/sortable.js';
 import { toast } from '../../components/toast.js';
-import { ROOM_TYPES } from '/shared/schemas/venue.js';
+import { ROOM_TYPES } from '/shared/rules/validate.js';
 
 export function Spaces() {
   return html`<${VenueAdmin} kind="spaces" />`;

@@ -6,7 +6,7 @@ import { isCompact } from '../../components/media-query.js';
 import { PlatformIcon } from '../../components/platform-icon.js';
 import { copyText } from '../../components/clipboard.js';
 import { fmtDateLong, fmtMonth, monthGrid, today, weekdayNames, isPastSlot } from '../../time.js';
-import { UNC_RE } from '/shared/schemas/common.js';
+import { UNC_RE } from '/shared/rules/validate.js';
 
 export const KIND_ICON = { video: 'video', image: 'image', carousel: 'images' };
 export const SOCIAL_VIEWS = /** @type {const} */ (['year', 'month', 'list']);

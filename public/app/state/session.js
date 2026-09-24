@@ -24,6 +24,17 @@ export const isDemo = computed(() => session.value?.workspace === 'demo');
 export const orgTz = computed(() => session.value?.settings.tz ?? 'Europe/Bucharest');
 
 export async function refreshSession() {
+  // The first load uses the payload the server embedded in the page.
+  const embedded = document.getElementById('session-data');
+  if (embedded) {
+    embedded.remove();
+    try {
+      session.value = JSON.parse(embedded.textContent ?? '');
+      return session.value;
+    } catch {
+      /* fall back to the API */
+    }
+  }
   const res = await fetch('/api/v1/session', { credentials: 'same-origin', headers: { Accept: 'application/json' } });
   session.value = await res.json();
   return session.value;

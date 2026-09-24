@@ -1,0 +1,45 @@
+[
+  {
+    "id": "user-admin",
+    "username": "admin",
+    "name": "Sys Admin",
+    "role": "admin",
+    "color": "#ef4444",
+    "passwordHash": "$2b$04$uPpgpDLCsEQLKSjEPLdivOfgElu2yVygy41h0vnD2.1yOcx6B4b9O",
+    "tokenVersion": 0,
+    "createdAt": "2026-01-10"
+  },
+  {
+    "id": "user-ana",
+    "username": "Ana.Pop",
+    "name": "Ana Pop",
+    "role": "moderator",
+    "color": "#22c55e",
+    "passwordHash": "$2b$04$uPpgpDLCsEQLKSjEPLdivOfgElu2yVygy41h0vnD2.1yOcx6B4b9O",
+    "passkeys": [
+      {
+        "id": "abc",
+        "publicKey": "x"
+      }
+    ],
+    "createdAt": "2026-02-01"
+  },
+  {
+    "id": "user-demo",
+    "username": "demo",
+    "name": "Demo Utilizator",
+    "role": "user",
+    "color": "#8b5cf6",
+    "isDemo": true,
+    "passwordHash": "$2b$04$uPpgpDLCsEQLKSjEPLdivOfgElu2yVygy41h0vnD2.1yOcx6B4b9O"
+  },
+  {
+    "id": "user-demo-admin",
+    "username": "demo_admin",
+    "name": "Demo Admin",
+    "role": "admin",
+    "color": "#f59e0b",
+    "isDemo": true,
+    "passwordHash": "$2b$04$uPpgpDLCsEQLKSjEPLdivOfgElu2yVygy41h0vnD2.1yOcx6B4b9O"
+  }
+]
