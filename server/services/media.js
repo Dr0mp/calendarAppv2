@@ -8,6 +8,10 @@ import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { createRequire } from 'node:module';
 import sharp from 'sharp';
+
+// Never let libvips keep files open: on Windows an open handle blocks renaming
+// and deleting (EBUSY). Inputs are also read into memory before processing.
+sharp.cache(false);
 import { newId, isoNow, HOUR } from '../util.js';
 import { ApiError } from '../http/errors.js';
 import { storageStatus } from './storage.js';
@@ -136,9 +140,10 @@ async function processFile(file, type, thumbFile) {
   /** @type {{width: number|null, height: number|null, duration_s: number|null, codec: string|null, thumbBytes: number, bytes: number}} */
   const info = { width: null, height: null, duration_s: null, codec: null, thumbBytes: 0, bytes: fs.statSync(file).size };
   if (type.kind === 'image') {
+    const input = fs.readFileSync(file);
     let meta;
     try {
-      meta = await sharp(file, { animated: type.mime === 'image/gif' }).metadata();
+      meta = await sharp(input, { animated: type.mime === 'image/gif' }).metadata();
     } catch {
       throw new ApiError(415, 'unsupported_media', 'Unreadable image');
     }
@@ -148,7 +153,7 @@ async function processFile(file, type, thumbFile) {
     if (type.mime !== 'image/gif') {
       // Re-encode without metadata: removes EXIF (GPS) and applies the orientation.
       const tmp = `${file}.clean`;
-      let pipeline = sharp(file).rotate();
+      let pipeline = sharp(input).rotate();
       if (type.mime === 'image/jpeg') pipeline = pipeline.jpeg({ quality: 92, mozjpeg: true });
       else if (type.mime === 'image/png') pipeline = pipeline.png({ compressionLevel: 9 });
       else if (type.mime === 'image/webp') pipeline = pipeline.webp({ quality: 92 });
@@ -158,7 +163,7 @@ async function processFile(file, type, thumbFile) {
       info.bytes = fs.statSync(file).size;
     }
     ensureDir(thumbFile);
-    const t = await sharp(file, { animated: false }).rotate().resize({ width: 480, withoutEnlargement: true }).webp({ quality: 78 }).toFile(thumbFile);
+    const t = await sharp(fs.readFileSync(file), { animated: false }).rotate().resize({ width: 480, withoutEnlargement: true }).webp({ quality: 78 }).toFile(thumbFile);
     info.thumbBytes = t.size;
     return info;
   }
@@ -252,8 +257,14 @@ async function finishIngest(app, ws, p) {
   try {
     info = await processFile(file, type, abs(ws, thumbRel));
   } catch (err) {
-    fs.rmSync(file, { force: true });
-    fs.rmSync(abs(ws, thumbRel), { force: true });
+    // Best-effort cleanup; never hide the original error.
+    for (const f of [file, abs(ws, thumbRel)]) {
+      try {
+        fs.rmSync(f, { force: true });
+      } catch {
+        /* left for the hourly cleanup */
+      }
+    }
     throw err;
   }
   const row = {
@@ -358,7 +369,7 @@ export async function cropMedia(app, ws, userId, id, r) {
   if (!m.mime.startsWith('image/')) throw new ApiError(415, 'unsupported_media', 'Only images can be cropped');
   if (r.x + r.w > m.width || r.y + r.h > m.height) throw new ApiError(400, 'validation_error', 'Crop outside the image', { fields: { crop: 'invalid_value' } });
   const fmt = m.mime === 'image/png' ? 'png' : m.mime === 'image/webp' ? 'webp' : 'jpeg';
-  const data = await sharp(abs(ws, m.path)).rotate().extract({ left: r.x, top: r.y, width: r.w, height: r.h }).toFormat(fmt, { quality: 92 }).toBuffer();
+  const data = await sharp(fs.readFileSync(abs(ws, m.path))).rotate().extract({ left: r.x, top: r.y, width: r.w, height: r.h }).toFormat(fmt, { quality: 92 }).toBuffer();
   const base = (m.original_name ?? 'image').replace(/\.[a-z0-9]+$/i, '');
   return ingestBuffer(app, ws, { userId, data, filename: `${base}-16x9.${fmt === 'jpeg' ? 'jpg' : fmt}` });
 }
