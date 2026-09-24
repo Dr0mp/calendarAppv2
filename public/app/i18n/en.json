@@ -507,9 +507,8 @@
     "legacyPassword": "Password from the old version",
     "addDemoPerson": "Add test person",
     "demoUsersTitle": "Test people in demo mode",
-    "demoUsersText": "You can add, edit, disable and delete test people. They get no email, can't sign in and disappear when the demo resets. The demo accounts (Demo User, Demo Administrator) can't be changed.",
-    "inviteIntroDemo": "No invitation is sent in the demo: the person appears in the list straight away, with no email and no password.",
-    "demoPersonAdded": "{name} added (demo only).",
+    "demoUsersText": "You can invite, edit, disable and delete test people. Each one gets an invitation link (by email, or copy it yourself), sets a password and can then sign in — but only into the demo. They disappear when the demo resets. The demo accounts (Demo User, Demo Administrator) can't be changed.",
+    "inviteIntroDemo": "The person gets an invitation link to set a password and can then sign in to the demo only. The email is optional: without it, you copy the link and send it yourself.",
     "demoUsernameLocked": "In the demo, the username can't be changed.",
     "demoLockedHint": "Demo accounts can't be changed."
   },

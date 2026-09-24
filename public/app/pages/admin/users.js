@@ -1,6 +1,6 @@
 import { html, useEffect, useMemo, useState } from '../../html.js';
 import { t } from '../../i18n/index.js';
-import { user as me } from '../../state/session.js';
+import { user as me, isDemo as isDemoWs } from '../../state/session.js';
 import { api, ApiError } from '../../api.js';
 import {
   Alert, Avatar, Badge, Button, Checkbox, ColorPicker, EmptyState, Field, Icon, Input, SearchField, Select, SkeletonList,
@@ -18,8 +18,8 @@ export default function Users() {
   const [emailOn, setEmailOn] = useState(false);
   const [q, setQ] = useState('');
   const [dialog, setDialog] = useState(/** @type {null | {kind: string, user?: any, link?: string, purpose?: string}} */ (null));
-  // In the demo, the demo admin manages demo-only people (no email, no sign-in).
-  const demo = !!me.value?.isDemo;
+  // In the demo workspace, admins manage demo-only people (they sign in only to the demo).
+  const demo = isDemoWs.value;
   /** @param {any} u */
   const canManage = (u) => (demo ? u.isSeed : !(u.isDemo || u.isSeed));
 
@@ -126,7 +126,7 @@ export default function Users() {
           ref=${p.ref} onClick=${p.toggle} aria-expanded=${p['aria-expanded']} aria-haspopup="menu" aria-label=${t('common.moreActionsFor', { name: u.name })}
           disabled=${!canManage(u)}><${Icon} name="ellipsis" /></button>`}>
           ${(/** @type {() => void} */ close) => html`<div class="menu" role="menu" onKeyDown=${menuKeys}>
-            ${!demo && html`${u.status === 'invited' && html`
+            ${u.status === 'invited' && html`
               ${emailOn && u.email && html`<${MenuItem} icon="send" onClick=${() => (close(), link(u, 'invite', true))}>${t('admin.resendInvite')}</${MenuItem}>`}
               <${MenuItem} icon="link" onClick=${() => (close(), link(u, 'invite', false))}>${t('admin.copyInviteLink')}</${MenuItem}>`}
             ${u.status === 'active' && html`
@@ -135,9 +135,9 @@ export default function Users() {
             <${MenuItem} icon="key-round" onClick=${() => (close(), removePasskeys(u))}>${t('admin.removePasskeys')}</${MenuItem}>
             <${MenuItem} icon="log-out" onClick=${() => (close(), revokeSessions(u))}>${t('admin.revokeSessions')}</${MenuItem}>
             <${MenuItem} icon="download" onClick=${() => (close(), exportData(u))}>${t('admin.exportData')}</${MenuItem}>
-            ${me.value?.isRoot && u.role === 'admin' && u.status === 'active' && !u.isRoot &&
-            html`<${MenuItem} icon="star" onClick=${() => (close(), transferRoot(u))}>${t('admin.transferRoot')}</${MenuItem}>`}`}
-            ${!u.isRoot && u.id !== me.value?.id && html`${!demo && html`<hr />`}
+            ${!demo && me.value?.isRoot && u.role === 'admin' && u.status === 'active' && !u.isRoot &&
+            html`<${MenuItem} icon="star" onClick=${() => (close(), transferRoot(u))}>${t('admin.transferRoot')}</${MenuItem}>`}
+            ${!u.isRoot && u.id !== me.value?.id && html`<hr />
               ${u.status !== 'invited' && html`<${MenuItem} icon=${u.status === 'active' ? 'ban' : 'check'} onClick=${() => (close(), toggleStatus(u))}>
                 ${u.status === 'active' ? t('admin.disable') : t('admin.enable')}</${MenuItem}>`}
               <${MenuItem} icon="trash-2" danger onClick=${() => (close(), setDialog({ kind: 'delete', user: u }))}>${t('common.delete')}</${MenuItem}>`}
@@ -163,10 +163,7 @@ export default function Users() {
     ${dialog?.kind === 'invite' && html`<${InviteDialog} emailOn=${emailOn} demo=${demo} onClose=${() => setDialog(null)}
       onDone=${(/** @type {any} */ r) => {
         load();
-        if (r.demo) {
-          toast('success', t('admin.demoPersonAdded', { name: r.user.name }));
-          setDialog(null);
-        } else if (r.link) setDialog({ kind: 'link', user: r.user, link: r.link, purpose: 'invite' });
+        if (r.link) setDialog({ kind: 'link', user: r.user, link: r.link, purpose: 'invite' });
         else {
           toast('success', t('admin.inviteSent', { email: r.user.email }));
           setDialog(null);
@@ -201,7 +198,6 @@ function InviteDialog({ emailOn, demo, onClose, onDone }) {
     setErrors({});
     try {
       const body = { ...f, name: f.name.trim(), username: f.username.trim(), email: f.email.trim() };
-      if (demo) delete (/** @type {any} */ (body)).email;
       onDone(await api('POST', '/users', { body }));
     } catch (err) {
       if (err instanceof ApiError) {
@@ -220,7 +216,7 @@ function InviteDialog({ emailOn, demo, onClose, onDone }) {
       <p class="muted small">${demo ? t('admin.inviteIntroDemo') : emailOn ? t('admin.inviteIntroEmail') : t('admin.inviteIntroNoEmail')}</p>
       <${Field} label=${t('account.name')} error=${errors.name} required>${(/** @type {any} */ a) => html`<${Input} ...${a} value=${f.name} onInput=${(/** @type {string} */ v) => set('name', v)} autocomplete="off" />`}</${Field}>
       <${Field} label=${t('auth.username')} error=${errors.username} hint=${t('admin.usernameHint')} required>${(/** @type {any} */ a) => html`<${Input} ...${a} value=${f.username} onInput=${(/** @type {string} */ v) => set('username', v.toLowerCase())} autocapitalize="none" spellcheck="false" />`}</${Field}>
-      ${!demo && html`<${Field} label=${t('account.email')} error=${errors.email} required>${(/** @type {any} */ a) => html`<${Input} ...${a} type="email" value=${f.email} onInput=${(/** @type {string} */ v) => set('email', v)} />`}</${Field}>`}
+      <${Field} label=${t('account.email')} error=${errors.email} required=${!demo}>${(/** @type {any} */ a) => html`<${Input} ...${a} type="email" value=${f.email} onInput=${(/** @type {string} */ v) => set('email', v)} />`}</${Field}>
       <${Field} label=${t('admin.colRole')}>${(/** @type {any} */ a) => html`<${Select} ...${a} value=${f.role} onChange=${(/** @type {string} */ v) => set('role', v)}
         options=${ROLES.map((r) => ({ value: r, label: t(`roles.${r}`) }))} />`}</${Field}>
     </form>
@@ -244,7 +240,7 @@ function EditDialog({ user: u, demo, onClose, onDone }) {
     try {
       /** @type {Record<string, any>} */
       const body = { name: f.name.trim(), role: f.role, color: f.color, initials: f.initials.trim() || null };
-      if (!demo) body.email = f.email.trim() || null;
+      body.email = f.email.trim() || null;
       if (!u.isRoot && !demo) body.username = f.username.trim();
       await api('PATCH', `/users/${u.id}`, { body, version });
       toast('success', t('common.saved'));
@@ -279,7 +275,7 @@ function EditDialog({ user: u, demo, onClose, onDone }) {
         <${Field} label=${t('admin.initials')} error=${errors.initials} hint=${t('admin.initialsHint')}>
           ${(/** @type {any} */ a) => html`<${Input} ...${a} value=${f.initials} maxLength="3" onInput=${(/** @type {string} */ v) => set('initials', v.toUpperCase())} />`}</${Field}>
       </div>
-      ${!demo && html`<${Field} label=${t('account.email')} error=${errors.email}>${(/** @type {any} */ a) => html`<${Input} ...${a} type="email" value=${f.email} onInput=${(/** @type {string} */ v) => set('email', v)} />`}</${Field}>`}
+      <${Field} label=${t('account.email')} error=${errors.email}>${(/** @type {any} */ a) => html`<${Input} ...${a} type="email" value=${f.email} onInput=${(/** @type {string} */ v) => set('email', v)} />`}</${Field}>
       <${Field} label=${t('admin.colRole')} error=${errors.role} hint=${u.isRoot ? t('admin.rootRoleLocked') : t('admin.roleChangeHint')}>
         ${(/** @type {any} */ a) => html`<${Select} ...${a} value=${f.role} disabled=${u.isRoot} onChange=${(/** @type {string} */ v) => set('role', v)}
           options=${ROLES.map((r) => ({ value: r, label: t(`roles.${r}`) }))} />`}</${Field}>

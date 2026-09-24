@@ -134,20 +134,38 @@ test('the style guide renders both themes', async ({ page }) => {
   expect(light).not.toBe(dark);
 });
 
-test('demo: the demo admin adds, edits and deletes a test person', async ({ page, request }) => {
+test('demo: the demo admin invites a test person who signs in to the demo; edit and delete', async ({ page, request, browser }, info) => {
+  const username = `maria.${info.project.name.replace(/[^a-z]/g, '')}`;
   await signOut(page);
   await demoAdmin(page, request);
   await page.goto('/admin/users');
   await expect(page.getByText('Persoane de test în modul demonstrativ')).toBeVisible();
   await page.getByRole('button', { name: 'Adaugă persoană de test' }).click();
   const dlg = page.getByRole('dialog', { name: 'Adaugă persoană de test' });
-  await expect(dlg.getByLabel('Email')).toHaveCount(0);
   await dlg.getByRole('textbox', { name: 'Nume', exact: true }).fill('Maria Test');
+  await dlg.getByLabel('Nume utilizator').fill(username);
+  // No email: the invite link is shown to copy.
   await dlg.getByRole('button', { name: 'Adaugă persoană de test' }).click();
-  await expect(page.getByText('Maria Test a fost adăugat(ă) (doar în demo).')).toBeVisible();
+  const linkDialog = page.getByRole('dialog', { name: 'Link de invitație' });
+  const link = await linkDialog.getByRole('textbox').inputValue();
+  expect(link).toMatch(/\/invite\//);
+  await linkDialog.getByRole('button', { name: 'Închide' }).first().click();
   const row = page.getByRole('row', { name: /Maria Test/ });
-  await expect(row).toContainText('@seed.maria.test');
+  await expect(row).toContainText(`@seed.${username}`);
 
+  // The invitee sets a password and lands in the demo.
+  const ctx = await browser.newContext();
+  const p2 = await ctx.newPage();
+  await p2.goto(new URL(link).pathname);
+  await p2.getByLabel('Parolă nouă').fill('o parolă bună și lungă pentru demo');
+  await p2.getByLabel('Repetați parola').fill('o parolă bună și lungă pentru demo');
+  await p2.getByRole('button', { name: 'Salvează parola' }).click();
+  await p2.getByRole('button', { name: 'Mai târziu' }).click().catch(() => {});
+  await expect(p2).toHaveURL(/\/calendar/);
+  await expect(p2.getByText('Mod demonstrativ — datele se resetează zilnic')).toBeVisible();
+  await ctx.close();
+
+  await page.reload();
   await row.getByRole('button', { name: 'Editează' }).click();
   const edit = page.getByRole('dialog', { name: /Maria Test/ });
   await expect(edit.getByLabel('Nume utilizator')).toBeDisabled();
@@ -161,7 +179,6 @@ test('demo: the demo admin adds, edits and deletes a test person', async ({ page
   await expect(page.getByRole('row', { name: /Demo Administrator/ }).getByRole('button', { name: 'Editează' })).toBeDisabled();
 
   await renamed.getByRole('button', { name: /Mai multe acțiuni/ }).click();
-  await expect(page.getByRole('menuitem', { name: /link/i })).toHaveCount(0);
   await page.getByRole('menuitem', { name: 'Șterge' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Șterge utilizatorul' }).click();
   await expect(page.getByText('Utilizatorul a fost șters.')).toBeVisible();

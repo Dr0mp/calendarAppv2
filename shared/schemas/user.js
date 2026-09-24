@@ -17,11 +17,11 @@ export const InviteUser = z.strictObject({
   color: ownerColor.optional(),
 });
 
-/** Demo: a test person without an email address. */
+/** Demo: a demo-only person; the email is optional (the link can be copied). */
 export const DemoInviteUser = z.strictObject({
   name: text(80),
   username,
-  email: z.string().optional(),
+  email: z.union([email, z.literal('')]).optional(),
   role,
   color: ownerColor.optional(),
 });

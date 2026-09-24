@@ -14,24 +14,24 @@ import { isoNow } from '../../util.js';
 /** @type {Hono<import('../app.js').Env>} */
 export const userRoutes = new Hono();
 
-/** Demo admins can look, but never change users. @param {any} c */
+/** Actions that never happen in the demo (root handover). @param {any} c */
 function requireRealAdmin(c) {
   const u = requireAdmin(c);
-  if (u.is_demo) throw forbidden('demo_forbidden');
+  if (u.is_demo || u.is_seed || wsOf(c).name === 'demo') throw forbidden('demo_forbidden');
   return u;
 }
 
 /**
- * Who may add, edit or delete people: real admins manage real accounts; in
- * the demo, the demo admin manages demo-only people (seed users: no email,
- * no password, cannot sign in, removed at the next demo reset).
+ * Who may manage people: in main, admins manage real accounts; in the demo,
+ * admins (the demo admin, or anyone invited in the demo) manage demo people
+ * (seed users). Demo people sign in only to the demo and are removed at the
+ * next demo reset. The two shared demo accounts are never changed.
  * @param {any} c @param {any} [target]
  */
 function requireUserManager(c, target) {
   const u = requireAdmin(c);
-  if (u.is_demo) {
-    if (wsOf(c).name !== 'demo' || (target && !target.is_seed)) throw forbidden('demo_forbidden');
-  } else if (target && (target.is_demo || target.is_seed)) throw forbidden('demo_forbidden');
+  const demo = wsOf(c).name === 'demo';
+  if (target && (target.is_demo || (demo ? !target.is_seed : target.is_seed))) throw forbidden('demo_forbidden');
   return u;
 }
 
@@ -118,14 +118,15 @@ async function issueLink(c, u, purpose, send) {
 userRoutes.post('/users', async (c) => {
   const actor = requireUserManager(c);
   const app = c.get('app');
-  if (actor.is_demo) {
-    // Demo: a test person only. No email is kept or sent, no password, no sign-in.
+  if (wsOf(c).name === 'demo') {
+    // Demo: a demo-only person with the normal invite link (the email is optional).
     const data = await body(c, DemoInviteUser);
     const u = insertUser(app.authDb, {
-      name: data.name, username: demoUsername(app.authDb, data.username), role: data.role, color: data.color,
-      isSeed: true, status: 'active', createdBy: actor.id,
+      name: data.name, username: demoUsername(app.authDb, data.username), email: data.email || null, role: data.role, color: data.color,
+      isSeed: true, status: 'invited', createdBy: actor.id,
     });
-    return c.json({ user: adminView(c, u), emailed: false, link: null, demo: true }, 201);
+    const out = await issueLink(c, u, 'invite', !!u.email);
+    return c.json({ user: adminView(c, u), ...out, demo: true }, 201);
   }
   const data = await body(c, InviteUser);
   const u = insertUser(app.authDb, { ...data, status: 'invited', createdBy: actor.id });
@@ -139,8 +140,8 @@ userRoutes.patch('/users/:id', async (c) => {
   const actor = requireUserManager(c, target);
   const patch = await body(c, UpdateUser);
   const version = ifMatch(c);
-  // Demo people keep their demo username and never get an email address.
-  if (actor.is_demo && ((patch.username && patch.username !== target.username) || patch.email)) throw forbidden('demo_forbidden');
+  // Demo people keep their demo (seed.) username.
+  if (wsOf(c).name === 'demo' && patch.username && patch.username !== target.username) throw forbidden('demo_forbidden');
   if (patch.role && patch.role !== target.role) assertRoleChangeAllowed(target, patch.role);
   if (patch.username && target.is_root && patch.username !== target.username) throw forbidden('root_protected');
   const { status, ...fields } = patch;
@@ -154,31 +155,31 @@ userRoutes.patch('/users/:id', async (c) => {
 });
 
 userRoutes.post('/users/:id/invite', async (c) => {
-  requireRealAdmin(c);
   const u = visibleUser(c, c.req.param('id'));
+  requireUserManager(c, u);
   const { send } = await body(c, LinkRequest);
   if (u.status !== 'invited') throw new ApiError(409, 'already_active', 'User already activated');
   return c.json(await issueLink(c, u, 'invite', send ?? true));
 });
 
 userRoutes.post('/users/:id/reset-link', async (c) => {
-  requireRealAdmin(c);
   const u = visibleUser(c, c.req.param('id'));
+  requireUserManager(c, u);
   const { send } = await body(c, LinkRequest);
   if (u.status !== 'active') throw new ApiError(409, 'user_not_active', 'User is not active');
   return c.json(await issueLink(c, u, 'reset', send ?? true));
 });
 
 userRoutes.delete('/users/:id/passkeys', (c) => {
-  requireRealAdmin(c);
   const u = visibleUser(c, c.req.param('id'));
+  requireUserManager(c, u);
   const n = c.get('app').authDb.prepare('DELETE FROM passkeys WHERE user_id = ?').run(u.id).changes;
   return c.json({ ok: true, removed: n });
 });
 
 userRoutes.delete('/users/:id/sessions', (c) => {
-  requireRealAdmin(c);
   const u = visibleUser(c, c.req.param('id'));
+  requireUserManager(c, u);
   return c.json({ ok: true, removed: revokeUserSessions(c.get('app').authDb, u.id) });
 });
 

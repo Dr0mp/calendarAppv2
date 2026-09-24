@@ -30,7 +30,8 @@ authRoutes.post('/auth/login', async (c) => {
   const gate = loginAllowed(app.authDb, username, ip);
   if (!gate.ok) throw tooMany(gate.retryAfter);
   const user = findByLogin(app.authDb, username);
-  const usable = user && !user.is_demo && !user.is_seed && user.status === 'active' ? user : null;
+  // People invited inside the demo sign in with a password too, but only into the demo.
+  const usable = user && !user.is_demo && (!user.is_seed || app.config.demoEnabled) && user.status === 'active' ? user : null;
   const { ok, rehash } = await verifyPassword(usable?.password_hash ?? null, password);
   if (!ok || !usable) {
     loginFailed(app.authDb, username, ip);
@@ -39,7 +40,7 @@ authRoutes.post('/auth/login', async (c) => {
   loginSucceeded(app.authDb, username, ip);
   if (rehash) setPasswordHash(app.authDb, usable.id, await hashPassword(password));
   app.authDb.prepare('UPDATE users SET last_login_at = ? WHERE id = ?').run(isoNow(), usable.id);
-  signIn(c, loadUser(app.authDb, usable.id), 'main');
+  signIn(c, loadUser(app.authDb, usable.id), usable.is_seed ? 'demo' : 'main');
   return c.json(sessionPayload(c));
 });
 
@@ -86,12 +87,12 @@ authRoutes.post('/auth/passkey/verify', async (c) => {
   const { response } = await body(c, z.strictObject({ response: z.record(z.string(), z.unknown()) }));
   const result = await verifyAuthentication(app.authDb, app.config, response);
   const user = result && loadUser(app.authDb, result.userId);
-  if (!user || user.status !== 'active' || user.is_demo) {
+  if (!user || user.status !== 'active' || user.is_demo || (user.is_seed && !app.config.demoEnabled)) {
     loginFailed(app.authDb, 'passkey', ip);
     throw new ApiError(401, 'passkey_failed', 'Passkey sign-in failed');
   }
   app.authDb.prepare('UPDATE users SET last_login_at = ? WHERE id = ?').run(isoNow(), user.id);
-  signIn(c, user, 'main');
+  signIn(c, user, user.is_seed ? 'demo' : 'main');
   return c.json(sessionPayload(c));
 });
 
@@ -101,7 +102,7 @@ authRoutes.post('/auth/forgot', async (c) => {
   const ipGate = hit(app.authDb, `forgot-ip:${c.get('ip')}`, 5, HOUR);
   if (!ipGate.ok) throw tooMany(ipGate.retryAfter);
   const user = findByLogin(app.authDb, login);
-  if (user && user.status === 'active' && !user.is_demo && !user.is_seed && user.email) {
+  if (user && user.status === 'active' && !user.is_demo && user.email) {
     const acct = hit(app.authDb, `forgot-user:${user.id}`, 3, HOUR);
     if (acct.ok && app.mailer.configured) {
       const token = createToken(app.authDb, user.id, 'reset');
@@ -128,7 +129,7 @@ authRoutes.post('/auth/token/:token', async (c) => {
   const t = peekToken(app.authDb, raw);
   const user = t && loadUser(app.authDb, t.userId);
   if (!t || !user || user.status === 'disabled') throw notFound('token_invalid');
-  if (user.is_demo || user.is_seed) throw forbidden('demo_forbidden');
+  if (user.is_demo || (user.is_seed && !app.config.demoEnabled)) throw forbidden('demo_forbidden');
   const policy = await checkPassword(password, user, { hibp: app.config.hibpCheck });
   if (policy) throw new ApiError(400, policy, 'Password rejected', { fields: { password: policy } });
   const hash = await hashPassword(password);
@@ -141,6 +142,6 @@ authRoutes.post('/auth/token/:token', async (c) => {
   });
   if (!consumed) throw notFound('token_invalid');
   app.authDb.prepare('UPDATE users SET last_login_at = ? WHERE id = ?').run(isoNow(), user.id);
-  signIn(c, loadUser(app.authDb, user.id), 'main');
+  signIn(c, loadUser(app.authDb, user.id), user.is_seed ? 'demo' : 'main');
   return c.json(sessionPayload(c));
 });

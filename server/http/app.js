@@ -105,7 +105,7 @@ export function createHttpApp(app) {
       if (s) {
         const user = loadUser(app.authDb, s.user_id);
         const demoOff = s.workspace === 'demo' && !app.config.demoEnabled;
-        if (!user || user.status !== 'active' || demoOff || (user.is_demo && s.workspace !== 'demo')) {
+        if (!user || user.status !== 'active' || demoOff || ((user.is_demo || user.is_seed) && s.workspace !== 'demo')) {
           deleteSession(app.authDb, s.id_hash);
         } else {
           c.set('session', s);

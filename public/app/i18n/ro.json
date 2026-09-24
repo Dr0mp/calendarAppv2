@@ -507,9 +507,8 @@
     "legacyPassword": "Parolă din versiunea veche",
     "addDemoPerson": "Adaugă persoană de test",
     "demoUsersTitle": "Persoane de test în modul demonstrativ",
-    "demoUsersText": "Poți adăuga, edita, dezactiva și șterge persoane de test. Nu primesc email, nu se pot autentifica și dispar la resetarea demo-ului. Conturile demo (Demo Utilizator, Demo Administrator) nu pot fi modificate.",
-    "inviteIntroDemo": "În demo nu se trimite nicio invitație: persoana apare imediat în listă, fără email și fără parolă.",
-    "demoPersonAdded": "{name} a fost adăugat(ă) (doar în demo).",
+    "demoUsersText": "Poți invita, edita, dezactiva și șterge persoane de test. Fiecare primește un link de invitație (pe email sau îl copiezi tu), își setează o parolă și se poate apoi autentifica — dar doar în demo. Dispar la resetarea demo-ului. Conturile demo (Demo Utilizator, Demo Administrator) nu pot fi modificate.",
+    "inviteIntroDemo": "Persoana primește un link de invitație ca să-și seteze parola și se poate apoi autentifica doar în demo. Emailul e opțional: fără el, copiezi linkul și i-l trimiți tu.",
     "demoUsernameLocked": "În demo, numele de utilizator nu se poate schimba.",
     "demoLockedHint": "Conturile demo nu pot fi modificate."
   },

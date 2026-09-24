@@ -199,38 +199,51 @@ describe('demo isolation for users', () => {
     assert.equal((await d.patch(`/users/${real.id}`, { name: 'x' }, real.version)).status, 404);
   });
 
-  test('demo admin adds, edits and deletes demo-only people; everything else stays locked', async () => {
+  test('demo admin invites, edits and deletes demo-only people who sign in to the demo only', async () => {
     const d = new Client(t.http, '10.8.9.2');
     await d.demo('demo_admin');
-    // Add: a test person with no email, no password, no link.
-    const r = await d.post('/users', { name: 'Maria Test', username: 'maria.test', email: 'maria@real.example', role: 'moderator' });
+    // Invite: a demo-only person gets the normal invite link.
+    const r = await d.post('/users', { name: 'Maria Test', username: 'maria.test', role: 'moderator' });
     assert.equal(r.status, 201, JSON.stringify(r.data));
     assert.equal(r.data.demo, true);
-    assert.equal(r.data.link, null);
+    assert.match(r.data.link, /\/invite\/[\w-]{43}$/);
     const maria = r.data.user;
     assert.equal(maria.username, 'seed.maria.test');
-    assert.equal(maria.email, null, 'the address is not kept');
-    assert.deepEqual([maria.isSeed, maria.status, maria.role], [true, 'active', 'moderator']);
-    assert.equal(t.outbox().filter((m) => m.to === 'maria@real.example').length, 0, 'no email sent');
+    assert.deepEqual([maria.isSeed, maria.status, maria.role], [true, 'invited', 'moderator']);
+    // With an email, the invitation is sent.
+    const withMail = await d.post('/users', { name: 'Boss', username: 'boss', email: 'boss.demo@example.com', role: 'user' });
+    assert.equal(withMail.data.emailed, true);
+    assert.equal(t.outbox().at(-1).to, 'boss.demo@example.com');
     // A username a real account uses is never revealed: the demo one just differs.
-    assert.equal((await d.post('/users', { name: 'Boss', username: 'boss', role: 'user' })).data.user.username, 'seed.boss');
+    assert.equal(withMail.data.user.username, 'seed.boss');
     // Real admins never see demo people.
     assert.ok(!(await admin.get('/users')).data.items.some((/** @type {any} */ u) => u.id === maria.id));
 
-    // Edit and disable.
-    const e1 = await d.patch(`/users/${maria.id}`, { name: 'Maria Ionescu', role: 'user', color: 'owner-3' }, maria.version);
-    assert.equal(e1.status, 200, JSON.stringify(e1.data));
-    assert.equal(e1.data.name, 'Maria Ionescu');
-    const e2 = await d.patch(`/users/${maria.id}`, { status: 'disabled' }, e1.data.version);
-    assert.equal(e2.data.status, 'disabled');
-    assert.equal((await d.patch(`/users/${maria.id}`, { email: 'a@b.ro' }, e2.data.version)).data.error.code, 'demo_forbidden');
-    assert.equal((await d.patch(`/users/${maria.id}`, { username: 'other' }, e2.data.version)).data.error.code, 'demo_forbidden');
+    // The link sets a password and signs in to the demo; later password logins land in the demo too.
+    const PW = 'o parolă bună și lungă pentru demo';
+    const accept = await new Client(t.http, '10.8.9.5').post(`/auth/token/${r.data.link.split('/').pop()}`, { password: PW });
+    assert.equal(accept.status, 200, JSON.stringify(accept.data));
+    assert.equal(accept.data.workspace, 'demo');
+    const m = new Client(t.http, '10.8.9.6');
+    assert.equal((await m.login('seed.maria.test', PW)).data.workspace, 'demo');
+    assert.ok((await m.get('/users')).status < 500);
 
-    // Demo accounts, links, passkeys and sessions stay locked.
+    // Edit and disable.
+    const cur = (await d.get(`/users/${maria.id}`)).data;
+    const e1 = await d.patch(`/users/${maria.id}`, { name: 'Maria Ionescu', role: 'user', color: 'owner-3', email: 'maria@example.com' }, cur.version);
+    assert.equal(e1.status, 200, JSON.stringify(e1.data));
+    assert.deepEqual([e1.data.name, e1.data.email], ['Maria Ionescu', 'maria@example.com']);
+    assert.equal((await d.patch(`/users/${maria.id}`, { username: 'other' }, e1.data.version)).data.error.code, 'demo_forbidden');
+    assert.equal((await d.post(`/users/${maria.id}/reset-link`, { send: false })).status, 200);
+    assert.equal((await d.req('DELETE', `/users/${maria.id}/sessions`)).status, 200);
+    const e2 = await d.patch(`/users/${maria.id}`, { status: 'disabled' }, (await d.get(`/users/${maria.id}`)).data.version);
+    assert.equal(e2.data.status, 'disabled');
+    assert.equal((await new Client(t.http, '10.8.9.7').post('/auth/login', { username: 'seed.maria.test', password: PW })).status, 401);
+
+    // Demo accounts stay locked, and real people are out of reach.
     const me = (await d.get('/users')).data.items.find((/** @type {any} */ u) => u.username === 'demo');
     assert.equal((await d.patch(`/users/${me.id}`, { name: 'x' }, me.version)).data.error.code, 'demo_forbidden');
-    assert.equal((await d.post(`/users/${maria.id}/reset-link`, {})).status, 403);
-    assert.equal((await d.req('DELETE', `/users/${maria.id}/sessions`)).status, 403);
+    assert.equal((await d.post(`/users/${me.id}/reset-link`, {})).status, 403);
 
     // A sample person with upcoming demo entries needs a transfer, inside the demo.
     const anca = (await d.get('/users')).data.items.find((/** @type {any} */ u) => u.username === 'seed.anca');
