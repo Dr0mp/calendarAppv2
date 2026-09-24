@@ -88,8 +88,8 @@ for (const file of walk(path.join(root, 'public/app'))) {
     used.add(m[1]);
     if (!roSet.has(m[1])) errors.push(`${path.relative(root, file)}: unknown key "${m[1]}"`);
   }
-  // Keys referenced as data, e.g. { labelKey: 'nav.calendar' }
-  for (const m of src.matchAll(/(?:Key|key):\s*'([a-zA-Z]+\.[a-zA-Z0-9_.]+)'/g)) used.add(m[1]);
+  // Keys referenced as data or in expressions, e.g. { key: 'nav.calendar' } or a ? 'x.y' : 'x.z'
+  for (const m of src.matchAll(/'([a-zA-Z]+\.[a-zA-Z0-9_.]+)'/g)) if (roSet.has(m[1])) used.add(m[1]);
 }
 for (const k of ro) {
   if (used.has(k)) continue;

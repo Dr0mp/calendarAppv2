@@ -55,4 +55,25 @@ export function runMatrix(rows) {
   }
 }
 
+const space = { name: 'Matrix', capacity_people: 5, color: 'owner-1', description: null, enabled: true };
+const room = { name: 'Matrix', room_type: null, capacity_guests: 2, beds: null, color: 'owner-1', notes: null, enabled: true };
+
+/** @type {Row[]} */
+export const ADMIN_ROWS = [
+  ['GET', '/spaces', undefined, { anon: 401, user: 200, moderator: 200, admin: 200, demo: 200, demo_admin: 200 }],
+  ['GET', '/rooms', undefined, { anon: 401, user: 200, moderator: 200, admin: 200, demo: 200, demo_admin: 200 }],
+  ['POST', '/spaces', space, { anon: 401, user: 403, moderator: 403, admin: 201, demo: 403, demo_admin: 201 }],
+  ['POST', '/rooms', room, { anon: 401, user: 403, moderator: 403, admin: 201, demo: 403, demo_admin: 201 }],
+  ['POST', '/spaces/reorder', { ids: ['00000000-0000-7000-8000-000000000000'] }, { anon: 401, user: 403, moderator: 403, admin: 200 }],
+  ['GET', '/users/directory', undefined, { anon: 401, user: 200, moderator: 200, admin: 200, demo: 200, demo_admin: 200 }],
+  ['GET', '/users', undefined, { anon: 401, user: 403, moderator: 403, admin: 200, demo: 403, demo_admin: 200 }],
+  ['POST', '/users', { name: 'M', username: 'matrix.x', email: 'mx@example.com', role: 'user' },
+    { anon: 401, user: 403, moderator: 403, demo: 403, demo_admin: 403 }],
+  ['GET', '/settings', undefined, { anon: 401, user: 403, moderator: 403, admin: 200, demo: 403, demo_admin: 200 }],
+  ['PATCH', '/settings', { org_name: 'Casa Artis' }, { anon: 401, user: 403, moderator: 403, admin: 200, demo: 403, demo_admin: 403 }],
+  ['POST', '/settings/test-email', {}, { anon: 401, user: 403, moderator: 403, demo: 403, demo_admin: 403 }],
+  ['GET', '/admin/summary', undefined, { anon: 401, user: 403, moderator: 403, admin: 200, demo: 403, demo_admin: 200 }],
+];
+
 describe('account endpoints', () => runMatrix(ACCOUNT_ROWS));
+describe('venues, users and settings', () => runMatrix(ADMIN_ROWS));

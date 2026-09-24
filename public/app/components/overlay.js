@@ -186,7 +186,7 @@ export function Popover({ trigger, children, align = 'start', label, class: cls 
     if (top + ph > window.innerHeight - 12 && r.top - ph - 6 > 12) top = r.top - ph - 6;
     setPos({ top, left });
     const first = /** @type {HTMLElement|null} */ (pop.current.querySelector('button, a, input, select, [tabindex="0"]'));
-    first?.focus();
+    first?.focus({ preventScroll: true });
   }, [open]);
 
   useEffect(() => {
@@ -203,7 +203,9 @@ export function Popover({ trigger, children, align = 'start', label, class: cls 
         btn.current?.focus();
       }
     };
+    const openedAt = performance.now();
     const onScroll = (/** @type {Event} */ e) => {
+      if (performance.now() - openedAt < 150) return;
       if (!pop.current?.contains(/** @type {Node} */ (e.target))) setOpen(false);
     };
     document.addEventListener('pointerdown', onDoc);

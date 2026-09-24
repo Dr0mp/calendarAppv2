@@ -20,11 +20,14 @@ export const InviteUser = z.strictObject({
 export const UpdateUser = z.strictObject({
   name: text(80).optional(),
   username: username.optional(),
-  email: email.optional(),
+  email: email.nullable().optional(),
   role: role.optional(),
   color: ownerColor.optional(),
   initials: optText(3).optional(),
+  status: z.enum(['active', 'disabled']).optional(),
 });
+
+export const LinkRequest = z.strictObject({ send: z.boolean().optional() });
 
 export const UpdateMe = z.strictObject({
   name: text(80).optional(),
@@ -33,4 +36,8 @@ export const UpdateMe = z.strictObject({
   theme: theme.optional(),
 });
 
-export const DeleteUser = z.strictObject({ transferTo: z.string().nullish() });
+export const DeleteUser = z.strictObject({
+  transferTo: z.string().nullish(),
+  /** Keep past entries with a "former user" placeholder instead of transferring them. */
+  keepPast: z.boolean().optional(),
+});

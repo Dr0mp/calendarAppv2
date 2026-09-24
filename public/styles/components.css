@@ -1214,6 +1214,8 @@
   .table-wrap {
     container-type: inline-size;
     container-name: table;
+    position: relative;
+    overflow-x: auto;
   }
 
   .table {
@@ -1270,9 +1272,13 @@
       color: var(--text-strong);
       font-weight: var(--weight-medium);
     }
+
+    & .cell-nowrap {
+      white-space: nowrap;
+    }
   }
 
-  @container table (width < 720px) {
+  @container table (width < 760px) {
     .table,
     .table tbody,
     .table tr,
@@ -1296,6 +1302,8 @@
     .table td {
       display: grid;
       grid-template-columns: minmax(96px, 36%) minmax(0, 1fr);
+      justify-items: start;
+      align-items: center;
       gap: var(--space-3);
       padding: var(--space-1) 0;
       border: 0;
@@ -1308,6 +1316,7 @@
 
       &.cell-primary {
         grid-template-columns: minmax(0, 1fr);
+        justify-items: stretch;
         padding-block-end: var(--space-2);
         margin-block-end: var(--space-1);
         border-block-end: 1px solid var(--border-subtle);
@@ -1319,6 +1328,7 @@
 
       &.cell-actions {
         grid-template-columns: minmax(0, 1fr);
+        justify-items: stretch;
         text-align: start;
         padding-block-start: var(--space-2);
 
