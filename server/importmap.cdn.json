@@ -1,0 +1,12 @@
+{
+  "imports": {
+    "preact": "https://esm.sh/preact@10.29.8?target=es2022",
+    "preact/hooks": "https://esm.sh/preact@10.29.8/hooks?target=es2022",
+    "@preact/signals": "https://esm.sh/@preact/signals@2.11.2?external=preact&target=es2022",
+    "htm/preact": "https://esm.sh/htm@3.1.1/preact?external=preact&target=es2022",
+    "preact-iso": "https://esm.sh/preact-iso@2.12.2?external=preact&target=es2022",
+    "zod": "https://esm.sh/zod@4.6.5?target=es2022",
+    "@simplewebauthn/browser": "https://esm.sh/@simplewebauthn/browser@14.0.0?target=es2022",
+    "temporal-polyfill": "https://esm.sh/temporal-polyfill@1.0.5/global?target=es2022"
+  }
+}

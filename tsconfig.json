@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "target": "es2023",
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "allowJs": true,
+    "checkJs": true,
+    "noEmit": true,
+    "strict": false,
+    "noImplicitAny": false,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "lib": ["es2023", "dom", "dom.iterable"],
+    "types": ["node"],
+    "paths": { "/shared/*": ["./shared/*"] }
+  },
+  "include": ["server/**/*.js", "shared/**/*.js", "scripts/**/*.mjs"]
+}

@@ -1,0 +1,401 @@
+{
+  "schemaVersion": 1,
+  "seedUsers": [
+    { "key": "anca", "username": "seed.anca", "name": "Anca Popescu", "role": "admin", "color": "owner-9" },
+    { "key": "alex", "username": "seed.alex", "name": "Alex Marinescu", "role": "user", "color": "owner-2" },
+    { "key": "ioana", "username": "seed.ioana", "name": "Ioana Dumitru", "role": "moderator", "color": "owner-5" }
+  ],
+  "spaces": [
+    {
+      "key": "main-hall",
+      "name": "Sala Mare (Conferințe & Evenimente)",
+      "capacity_people": 80,
+      "color": "owner-8",
+      "description": "Dotată cu proiector 4K laser, sistem audio surround și scenă modulară"
+    },
+    {
+      "key": "studio-2b",
+      "name": "Studio Video 2B",
+      "capacity_people": 15,
+      "color": "owner-10",
+      "description": "Set lumini profesionale, fundaluri chroma key și camere broadcast 4K"
+    }
+  ],
+  "rooms": [
+    {
+      "key": "room-1",
+      "name": "Camera 1 (Matrimonială)",
+      "room_type": "Matrimonială",
+      "capacity_guests": 2,
+      "beds": "1 pat king size",
+      "color": "owner-1",
+      "notes": "Baie proprie, etaj 1, birou de lucru, vedere spre curte"
+    },
+    {
+      "key": "room-2",
+      "name": "Camera 2 (Twin)",
+      "room_type": "Twin",
+      "capacity_guests": 2,
+      "beds": "2 paturi individuale",
+      "color": "owner-10",
+      "notes": "Etaj 1, baie privată, balcon spre grădină"
+    }
+  ],
+  "platforms": [
+    {
+      "slug": "tiktok",
+      "name": "TikTok",
+      "color": "#fe2c55",
+      "domain": "tiktok.com",
+      "icon": "tiktok.png",
+      "description": "Videoclipuri scurte și caruseluri foto cu implicare ridicată",
+      "formats": [
+        {
+          "key": "tt-feed-video", "name": "Feed Video (9:16)", "media_kind": "video", "ratio_w": 9, "ratio_h": 16,
+          "width": 1080, "height": 1920, "file_formats": "MP4 / MOV (H.264 / HEVC)",
+          "min_duration_s": null, "max_duration_s": 600, "max_items": null, "max_file_mb": 72,
+          "caption_limit": 2200, "hook_length": 80,
+          "safe_zone": "Top 150px (status bar), bottom 320px (caption/audio), right 120px (interaction icons) keep clear",
+          "duration_note": "10 mins (sweet spot: 15-60s)", "file_size_note": "287.6 MB (iOS) / 72 MB (Android)",
+          "hook_note": "80-100 characters before truncation"
+        },
+        {
+          "key": "tt-photo-mode", "name": "Photo Mode / Carousel (9:16)", "media_kind": "carousel", "ratio_w": 9, "ratio_h": 16,
+          "width": 1080, "height": 1920, "file_formats": "JPG / JPEG / PNG / WebP",
+          "min_duration_s": null, "max_duration_s": null, "max_items": 35, "max_file_mb": 500,
+          "caption_limit": 2200, "hook_length": 80,
+          "safe_zone": "Full-screen 9:16; keep logos and text centered away from bottom and right edge",
+          "duration_note": "Up to 35 photos (sweet spot: 5-15)", "file_size_note": "500 MB total (recommended <100 KB/photo)",
+          "hook_note": "80-100 characters before 'more'"
+        },
+        {
+          "key": "tt-story", "name": "TikTok Story (9:16)", "media_kind": "video", "ratio_w": 9, "ratio_h": 16,
+          "width": 1080, "height": 1920, "file_formats": "MP4 / MOV / JPG",
+          "min_duration_s": null, "max_duration_s": 15, "max_items": null, "max_file_mb": 72,
+          "caption_limit": 2200, "hook_length": null,
+          "safe_zone": "9:16 vertical full screen",
+          "duration_note": "15s video clip or photo (24-hour expiry)", "file_size_note": "72 MB",
+          "hook_note": "Immediate hook recommended"
+        }
+      ]
+    },
+    {
+      "slug": "instagram",
+      "name": "Instagram",
+      "color": "#e1306c",
+      "domain": "instagram.com",
+      "icon": "instagram.png",
+      "description": "Reels, postări portret 4:5, caruseluri de 20 de slide-uri și Stories",
+      "formats": [
+        {
+          "key": "ig-reels", "name": "Instagram Reel (9:16)", "media_kind": "video", "ratio_w": 9, "ratio_h": 16,
+          "width": 1080, "height": 1920, "file_formats": "MP4 / MOV (H.264, AAC audio)",
+          "min_duration_s": null, "max_duration_s": 90, "max_items": null, "max_file_mb": 4096,
+          "caption_limit": 2200, "hook_length": 125,
+          "safe_zone": "Keep vital text inside central 1080x1350 (4:5) zone; bottom 25% has handle/caption",
+          "duration_note": "90s (recommended) / up to 15 mins", "file_size_note": "4 GB",
+          "hook_note": "125 characters before '... more'"
+        },
+        {
+          "key": "ig-feed-portrait", "name": "Portrait Feed Post (4:5)", "media_kind": "image", "ratio_w": 4, "ratio_h": 5,
+          "width": 1080, "height": 1350, "file_formats": "JPG / PNG / WebP",
+          "min_duration_s": null, "max_duration_s": null, "max_items": null, "max_file_mb": 30,
+          "caption_limit": 2200, "hook_length": 125,
+          "safe_zone": "Fills vertical screen real estate in feed without letterboxing",
+          "duration_note": "Static image", "file_size_note": "30 MB",
+          "hook_note": "125 characters before '... more'"
+        },
+        {
+          "key": "ig-carousel", "name": "Carousel Gallery (4:5 or 1:1)", "media_kind": "carousel", "ratio_w": 4, "ratio_h": 5,
+          "width": 1080, "height": 1350, "file_formats": "JPG / PNG / MP4",
+          "min_duration_s": null, "max_duration_s": null, "max_items": 20, "max_file_mb": 30,
+          "caption_limit": 2200, "hook_length": 125,
+          "safe_zone": "All slides must maintain identical aspect ratio (4:5 portrait recommended)",
+          "duration_note": "Up to 20 slides (images + video clips)", "file_size_note": "30 MB per photo / 4 GB video",
+          "hook_note": "125 characters before '... more'"
+        },
+        {
+          "key": "ig-square", "name": "Square Feed Post (1:1)", "media_kind": "image", "ratio_w": 1, "ratio_h": 1,
+          "width": 1080, "height": 1080, "file_formats": "JPG / PNG",
+          "min_duration_s": null, "max_duration_s": null, "max_items": null, "max_file_mb": 30,
+          "caption_limit": 2200, "hook_length": 125,
+          "safe_zone": "Classic square 1:1 grid alignment",
+          "duration_note": "Static image", "file_size_note": "30 MB",
+          "hook_note": "125 characters before '... more'"
+        },
+        {
+          "key": "ig-story", "name": "Instagram Story (9:16)", "media_kind": "video", "ratio_w": 9, "ratio_h": 16,
+          "width": 1080, "height": 1920, "file_formats": "MP4 / MOV / JPG",
+          "min_duration_s": null, "max_duration_s": 60, "max_items": null, "max_file_mb": 30,
+          "caption_limit": 2200, "hook_length": null,
+          "safe_zone": "Top 250px (profile bar) and bottom 250px (message input) keep clear",
+          "duration_note": "60s per clip (24-hour expiry)", "file_size_note": "30 MB photo / 4 GB video",
+          "hook_note": "On-screen text stickers recommended"
+        }
+      ]
+    },
+    {
+      "slug": "facebook",
+      "name": "Facebook",
+      "color": "#1877f2",
+      "domain": "facebook.com",
+      "icon": "facebook.png",
+      "description": "Postări cu acoperire largă, Reels, video orizontal și albume foto pentru comunitate",
+      "formats": [
+        {
+          "key": "fb-feed-photo", "name": "Feed Portrait / Square Photo (4:5 / 1:1)", "media_kind": "image", "ratio_w": 4, "ratio_h": 5,
+          "width": 1080, "height": 1350, "file_formats": "JPG / PNG / WebP",
+          "min_duration_s": null, "max_duration_s": null, "max_items": null, "max_file_mb": 30,
+          "caption_limit": 63206, "hook_length": 125,
+          "safe_zone": "4:5 for maximum mobile feed space or 1:1 (1200x1200)",
+          "duration_note": "Static image", "file_size_note": "30 MB",
+          "hook_note": "125 characters on mobile / 477 on desktop before 'See More'"
+        },
+        {
+          "key": "fb-reels", "name": "Facebook Reel (9:16)", "media_kind": "video", "ratio_w": 9, "ratio_h": 16,
+          "width": 1080, "height": 1920, "file_formats": "MP4 / MOV",
+          "min_duration_s": null, "max_duration_s": 90, "max_items": null, "max_file_mb": 4096,
+          "caption_limit": 2200, "hook_length": 125,
+          "safe_zone": "Avoid bottom 20% overlay area (page name, sound tag, caption)",
+          "duration_note": "90 seconds", "file_size_note": "4 GB",
+          "hook_note": "125 characters before 'See More'"
+        },
+        {
+          "key": "fb-video", "name": "Feed Landscape Video (16:9)", "media_kind": "video", "ratio_w": 16, "ratio_h": 9,
+          "width": 1920, "height": 1080, "file_formats": "MP4 / MOV",
+          "min_duration_s": null, "max_duration_s": 14400, "max_items": null, "max_file_mb": 10240,
+          "caption_limit": 63206, "hook_length": 125,
+          "safe_zone": "Standard 16:9 landscape viewing across mobile and desktop feeds",
+          "duration_note": "Up to 240 mins", "file_size_note": "10 GB",
+          "hook_note": "125 characters before truncation"
+        },
+        {
+          "key": "fb-carousel", "name": "Photo Album / Carousel (1:1)", "media_kind": "carousel", "ratio_w": 1, "ratio_h": 1,
+          "width": 1200, "height": 1200, "file_formats": "JPG / PNG",
+          "min_duration_s": null, "max_duration_s": null, "max_items": 10, "max_file_mb": 30,
+          "caption_limit": 63206, "hook_length": 125,
+          "safe_zone": "Square 1:1 or uniform 4:5 across all cards",
+          "duration_note": "Up to 10 images per album/carousel", "file_size_note": "30 MB per photo",
+          "hook_note": "125 characters before truncation"
+        }
+      ]
+    },
+    {
+      "slug": "youtube",
+      "name": "YouTube",
+      "color": "#ff0000",
+      "domain": "youtube.com",
+      "icon": "youtube.png",
+      "description": "Shorts (până la 3 minute), video lung 4K, miniaturi și postări în Comunitate",
+      "formats": [
+        {
+          "key": "yt-shorts", "name": "YouTube Short (9:16)", "media_kind": "video", "ratio_w": 9, "ratio_h": 16,
+          "width": 1080, "height": 1920, "file_formats": "MP4 / MOV",
+          "min_duration_s": null, "max_duration_s": 180, "max_items": null, "max_file_mb": 262144,
+          "caption_limit": 100, "hook_length": 50,
+          "safe_zone": "Right side has like/remix/comment stack; bottom 25% has video title & channel badge",
+          "duration_note": "Up to 3 mins (2026 extension)", "file_size_note": "256 GB",
+          "hook_note": "Title: 50-70 characters visible without ellipsis"
+        },
+        {
+          "key": "yt-standard-video", "name": "Long-form Video (16:9 4K/1080p)", "media_kind": "video", "ratio_w": 16, "ratio_h": 9,
+          "width": 3840, "height": 2160, "file_formats": "MP4 / ProRes / VP9 / AV1",
+          "min_duration_s": null, "max_duration_s": 43200, "max_items": null, "max_file_mb": 262144,
+          "caption_limit": 5000, "hook_length": 150,
+          "safe_zone": "16:9 horizontal; keep action inside 90% title safe boundary",
+          "duration_note": "Up to 12 hours", "file_size_note": "256 GB",
+          "hook_note": "Title: 100 chars (60 chars mobile cutoff); Description: first 150 chars before 'Show more'"
+        },
+        {
+          "key": "yt-thumbnail", "name": "Custom Thumbnail (16:9)", "media_kind": "image", "ratio_w": 16, "ratio_h": 9,
+          "width": 1280, "height": 720, "file_formats": "JPG / PNG / WebP",
+          "min_duration_s": null, "max_duration_s": null, "max_items": null, "max_file_mb": 2,
+          "caption_limit": 100, "hook_length": null,
+          "safe_zone": "CRITICAL: Bottom-right corner is covered by duration timestamp badge",
+          "duration_note": "Static image (min width 640px)", "file_size_note": "2 MB",
+          "hook_note": "Keep headline text large, bold, and away from bottom right"
+        },
+        {
+          "key": "yt-community", "name": "Community Image Post (1:1)", "media_kind": "image", "ratio_w": 1, "ratio_h": 1,
+          "width": 1080, "height": 1080, "file_formats": "JPG / PNG / WebP / GIF",
+          "min_duration_s": null, "max_duration_s": null, "max_items": null, "max_file_mb": 16,
+          "caption_limit": 5000, "hook_length": 150,
+          "safe_zone": "Centered 1:1 square maintains consistent look on web and mobile apps",
+          "duration_note": "Up to 5 images per post", "file_size_note": "16 MB",
+          "hook_note": "First 150-200 characters before 'Read more'"
+        }
+      ]
+    },
+    {
+      "slug": "reddit",
+      "name": "Reddit",
+      "color": "#ff4500",
+      "domain": "reddit.com",
+      "icon": "reddit.png",
+      "description": "Discuții în subreddit-uri, infografice, galerii și discuții video",
+      "formats": [
+        {
+          "key": "rd-image", "name": "Single Image / Infographic (4:5 or 1:1)", "media_kind": "image", "ratio_w": 4, "ratio_h": 5,
+          "width": 1080, "height": 1350, "file_formats": "JPG / PNG / WebP",
+          "min_duration_s": null, "max_duration_s": null, "max_items": null, "max_file_mb": 20,
+          "caption_limit": 40000, "hook_length": 60,
+          "safe_zone": "4:5 portrait or 1:1 square prevents cropping in mobile feeds",
+          "duration_note": "Static image (up to 4000x4000 supported)", "file_size_note": "20 MB",
+          "hook_note": "Title: 300 chars max (keep within 60-80 chars for mobile feed visibility)"
+        },
+        {
+          "key": "rd-gallery", "name": "Multi-Image Gallery / Carousel (4:5)", "media_kind": "carousel", "ratio_w": 4, "ratio_h": 5,
+          "width": 1080, "height": 1350, "file_formats": "JPG / PNG / GIF",
+          "min_duration_s": null, "max_duration_s": null, "max_items": 20, "max_file_mb": 20,
+          "caption_limit": 40000, "hook_length": 180,
+          "safe_zone": "Uniform 4:5 or 1:1 aspect ratio across all gallery items",
+          "duration_note": "Up to 20 images per gallery", "file_size_note": "20 MB per image",
+          "hook_note": "180 characters caption per image; title 60-80 chars recommended"
+        },
+        {
+          "key": "rd-video", "name": "Video Post (16:9 or 9:16)", "media_kind": "video", "ratio_w": 16, "ratio_h": 9,
+          "width": 1920, "height": 1080, "file_formats": "MP4 / MOV (H.264 codec)",
+          "min_duration_s": null, "max_duration_s": 900, "max_items": null, "max_file_mb": 1024,
+          "caption_limit": 40000, "hook_length": 60,
+          "safe_zone": "16:9 widescreen or 9:16 mobile clip; audio defaults to muted on feed scroll",
+          "duration_note": "Up to 15 mins", "file_size_note": "1 GB",
+          "hook_note": "Title: 300 chars max (60-80 visible on feed)"
+        }
+      ]
+    }
+  ],
+  "entries": [
+    {
+      "key": "evt-1", "type": "event", "owner": "anca",
+      "title": "Sincronizare strategie de conținut T4",
+      "description": "Aliniem campaniile de toamnă, specificațiile video pentru toate platformele și parteneriatele cu influenceri.\nLocație: Sala A / Zoom",
+      "space": "main-hall", "price_cents": null, "currency": null, "price_note": "intern, echipă",
+      "enroll_url": "https://calendar.google.com/event?eid=q3sync",
+      "cover_url": "https://images.unsplash.com/photo-1511578314322-379afb476865?auto=format&fit=crop&w=1200&h=675&q=80",
+      "sessions": [{ "day": 3, "start": "10:00", "end": "12:00" }]
+    },
+    {
+      "key": "evt-2", "type": "event", "owner": "anca",
+      "title": "Masterclass producție video 4K (intensiv, 3 zile)",
+      "description": "Masterclass practic în studio: scheme de lumini, captură audio de înaltă fidelitate și montaj pentru formate verticale, în 3 sesiuni complete.\nLocație: Studio 2B și transmisiune live",
+      "space": "studio-2b", "price_cents": 7500, "currency": "EUR", "price_note": null,
+      "enroll_url": "https://eventbrite.com/e/4k-video-masterclass-2026",
+      "cover_url": "https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?auto=format&fit=crop&w=1200&h=675&q=80",
+      "sessions": [
+        { "day": 8, "start": "14:00", "end": "17:00" },
+        { "day": 9, "start": "14:00", "end": "17:00" },
+        { "day": 10, "start": "14:00", "end": "17:00" }
+      ],
+      "room_bookings": [{ "room": "room-1", "check_in": 7, "check_out": 11, "guests": 1, "guest_names": "Trainer invitat" }]
+    },
+    {
+      "key": "evt-3", "type": "event", "owner": "alex",
+      "title": "Atelier: analiză social media și algoritmi",
+      "description": "Aprofundăm metricile de implicare din 2026, curbele de retenție și distribuția algoritmică.",
+      "space": "main-hall", "price_cents": 4500, "currency": "EUR", "price_note": "reducere studenți",
+      "enroll_url": "https://workshops.example.com/social-analytics-2026",
+      "cover_url": "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1200&h=675&q=80",
+      "sessions": [{ "day": 12, "start": "16:00", "end": "17:30" }]
+    },
+    {
+      "key": "evt-4", "type": "event", "owner": "alex",
+      "title": "AMA live cu comunitatea și clinică pentru creatori (2 zile)",
+      "description": "Sesiune live interactivă de 2 zile cu întrebări despre programarea conținutului, echipamente și construirea brandului.",
+      "space": "studio-2b", "price_cents": null, "currency": null, "price_note": null,
+      "enroll_url": "https://reddit.com/r/socialmedia/ama-2026",
+      "cover_url": "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=1200&h=675&q=80",
+      "sessions": [
+        { "day": 16, "start": "17:00", "end": "19:00" },
+        { "day": 17, "start": "17:00", "end": "19:00" }
+      ]
+    },
+    {
+      "key": "evt-5", "type": "event", "owner": "anca",
+      "title": "Briefing: standarde platforme și conformitate",
+      "description": "Revizuirea trimestrială a raporturilor de aspect, a rezoluțiilor și a zonelor sigure pe mobil.",
+      "space": "main-hall", "price_cents": null, "currency": null, "price_note": "participare obligatorie",
+      "enroll_url": "https://company.internal/training/standards-2026",
+      "cover_url": "https://images.unsplash.com/photo-1515378791036-0648a3ef77b2?auto=format&fit=crop&w=1200&h=675&q=80",
+      "sessions": [{ "day": 22, "start": "09:30", "end": "10:30" }]
+    },
+    {
+      "key": "blk-1", "type": "blocked", "owner": "ioana",
+      "title": "Mentenanță sistem audio",
+      "description": "Tehnicianul vine la 08:00. Sala rămâne închisă până la prânz.",
+      "space": "main-hall",
+      "sessions": [{ "day": 5, "start": "08:00", "end": "12:00" }]
+    },
+    {
+      "key": "room-1", "type": "room_only", "owner": "ioana",
+      "title": "Oaspeți: familia Ionescu",
+      "description": null,
+      "room_bookings": [{ "room": "room-2", "check_in": 4, "check_out": 6, "guests": 2, "guest_names": "Maria și Andrei Ionescu" }]
+    }
+  ],
+  "posts": [
+    {
+      "platform": "tiktok", "format": "tt-feed-video", "day": -10, "time": "17:30", "status": "published",
+      "title": "În culise: lansarea produsului 2026",
+      "caption": "Un tur rapid al noului flux de lucru din studio și al echipamentelor creative! 🚀 #creators #behindthescenes #production",
+      "media": ["https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=800&q=80"],
+      "share_link": "https://drive.google.com/drive/folders/4K_Master_BehindTheScenes_Reel"
+    },
+    {
+      "platform": "instagram", "format": "ig-feed-portrait", "day": -8, "time": "11:00", "status": "published",
+      "title": "Moodboard și paletă de culori pentru toamnă",
+      "caption": "Întâmpinăm toamna cu nuanțe calde, texturi naturale și o estetică primitoare. Care nuanță vă place cel mai mult? 🍁✨",
+      "media": ["https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80"],
+      "share_link": "https://dropbox.com/sh/folders/September_RAW_Photos_And_Presets"
+    },
+    {
+      "platform": "instagram", "format": "ig-carousel", "day": -5, "time": "14:15", "status": "published",
+      "title": "5 strategii pentru acoperire organică în 2026",
+      "caption": "Glisați pentru rezumatul actualizărilor de algoritm pentru T3/T4. Salvați postarea pentru ședințele de strategie! 📊💡",
+      "media": ["https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=800&q=80"],
+      "share_link": null
+    },
+    {
+      "platform": "youtube", "format": "yt-shorts", "day": -2, "time": "18:00", "status": "published",
+      "title": "Color grading în mai puțin de 60 de secunde #shorts",
+      "caption": "Grading rapid cu LUT-uri direct din editorul de pe telefon.",
+      "media": ["https://images.unsplash.com/photo-1536240478700-b869070f9279?auto=format&fit=crop&w=800&q=80"],
+      "share_link": null
+    },
+    {
+      "platform": "facebook", "format": "fb-feed-photo", "day": 2, "time": "13:00", "status": "scheduled",
+      "title": "Anunț: sesiune de întrebări și răspunsuri",
+      "caption": "Vineri organizăm o sesiune live interactivă! Lăsați întrebările despre design de brand și programarea conținutului mai jos.",
+      "media": ["https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=800&q=80"],
+      "share_link": null
+    },
+    {
+      "platform": "reddit", "format": "rd-image", "day": 4, "time": "16:00", "status": "scheduled",
+      "title": "Infografic: standarde de imagine și video pe platforme (ediția 2026)",
+      "caption": "Am comparat rezoluțiile, raporturile de aspect (9:16, 4:5, 16:9) și duratele optime pe principalele platforme. Sperăm să vă fie util!",
+      "media": ["https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=800&q=80"],
+      "share_link": null
+    },
+    {
+      "platform": "youtube", "format": "yt-standard-video", "day": 7, "time": "19:00", "status": "scheduled",
+      "title": "Masterclass complet de montaj video (4K)",
+      "caption": "Ghid complet: design sonor, keyframing, organizarea timeline-ului și presetări de export 4K pentru toate platformele.",
+      "media": ["https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?auto=format&fit=crop&w=800&q=80"],
+      "share_link": null
+    },
+    {
+      "platform": "tiktok", "format": "tt-photo-mode", "day": 10, "time": "15:45", "status": "draft",
+      "title": "4 editări foto doar cu lumină ambientală",
+      "caption": "Glisați pentru a vedea fotografiile needitate și editate, făcute la ora de aur. 🌅 #photomode #editingtutorial",
+      "media": ["https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=800&q=80"],
+      "share_link": null
+    },
+    {
+      "platform": "facebook", "format": "fb-feed-photo", "day": 15, "time": "10:00", "status": "scheduled",
+      "title": "Promovare: Briefing: standarde platforme și conformitate",
+      "caption": "🚀 Briefing: standarde platforme și conformitate\n📅 Sala Mare\n🎟️ Gratuit · participare obligatorie",
+      "media": ["https://images.unsplash.com/photo-1515378791036-0648a3ef77b2?auto=format&fit=crop&w=1200&h=675&q=80"],
+      "share_link": null,
+      "event": "evt-5"
+    }
+  ]
+}

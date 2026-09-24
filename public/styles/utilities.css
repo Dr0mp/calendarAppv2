@@ -1,0 +1,121 @@
+@layer utilities {
+  .sr-only {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .muted {
+    color: var(--text-muted);
+  }
+
+  .strong {
+    color: var(--text-strong);
+    font-weight: var(--weight-semibold);
+  }
+
+  .small {
+    font-size: var(--text-sm);
+  }
+
+  .xs {
+    font-size: var(--text-xs);
+  }
+
+  .nowrap {
+    white-space: nowrap;
+  }
+
+  .truncate {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-inline-size: 0;
+  }
+
+  .grow {
+    flex: 1;
+    min-inline-size: 0;
+  }
+
+  .ms-auto {
+    margin-inline-start: auto;
+  }
+
+  .mt-2 {
+    margin-block-start: var(--space-2);
+  }
+
+  .mt-4 {
+    margin-block-start: var(--space-4);
+  }
+
+  .mt-6 {
+    margin-block-start: var(--space-6);
+  }
+
+  .mb-4 {
+    margin-block-end: var(--space-4);
+  }
+
+  .text-danger {
+    color: var(--danger-fg);
+  }
+
+  .text-success {
+    color: var(--success-fg);
+  }
+
+  .text-warning {
+    color: var(--warning-fg);
+  }
+
+  .pre-line {
+    white-space: pre-line;
+    overflow-wrap: anywhere;
+  }
+
+  @media (width <= 640px) {
+    .hide-phone {
+      display: none;
+    }
+  }
+
+  @media (width > 640px) {
+    .only-phone {
+      display: none;
+    }
+  }
+
+  @media (width <= 900px) {
+    .hide-compact {
+      display: none;
+    }
+  }
+
+  @media (width > 900px) {
+    .only-compact {
+      display: none;
+    }
+  }
+
+  @media print {
+    .topbar,
+    .tabbar,
+    .demo-banner,
+    .no-print {
+      display: none;
+    }
+
+    .main {
+      padding: 0;
+      max-inline-size: none;
+    }
+  }
+}

@@ -1,0 +1,66 @@
+{
+  "name": "casa-artis-calendar",
+  "version": "2.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Casa Artis Calendar v2: team events calendar, social media planner and administration.",
+  "license": "GPL-3.0-only",
+  "engines": {
+    "node": ">=24"
+  },
+  "imports": {
+    "#shared/*": "./shared/*"
+  },
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node --watch server/index.js",
+    "vendor": "node scripts/vendor.mjs",
+    "icons": "node scripts/icons.mjs",
+    "lint": "eslint . && stylelint \"public/**/*.css\"",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "check:i18n": "node scripts/check-i18n.mjs",
+    "check:importmap": "node scripts/check-importmap.mjs",
+    "test": "npm run test:unit && npm run test:api",
+    "test:unit": "node --test --experimental-test-coverage --test-coverage-include='shared/**/*.js' --test-coverage-lines=90 --test-coverage-branches=80 \"tests/unit/**/*.test.js\"",
+    "test:api": "node --test --test-concurrency=4 \"tests/api/**/*.test.js\"",
+    "test:e2e": "playwright test",
+    "import-v1": "node scripts/import-v1.mjs"
+  },
+  "dependencies": {
+    "@hono/node-server": "2.1.1",
+    "@node-rs/argon2": "2.2.1",
+    "@simplewebauthn/server": "14.0.2",
+    "bcryptjs": "3.0.3",
+    "croner": "10.0.1",
+    "hono": "4.13.8",
+    "nodemailer": "10.0.10",
+    "pino": "10.3.1",
+    "sharp": "0.35.4",
+    "temporal-polyfill": "1.0.5",
+    "uuid": "14.0.2",
+    "yazl": "3.3.1",
+    "zod": "4.6.5"
+  },
+  "optionalDependencies": {
+    "ffmpeg-static": "5.3.0",
+    "ffprobe-static": "3.1.0"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "4.13.0",
+    "@eslint/js": "10.0.1",
+    "@fontsource-variable/inter": "5.3.0",
+    "@playwright/test": "1.63.0",
+    "@preact/signals": "2.11.2",
+    "@simplewebauthn/browser": "14.0.0",
+    "@types/node": "24.13.6",
+    "eslint": "10.11.0",
+    "globals": "17.12.0",
+    "htm": "3.1.1",
+    "lucide-static": "1.47.0",
+    "preact": "10.29.8",
+    "preact-iso": "2.12.2",
+    "stylelint": "17.15.0",
+    "stylelint-config-standard": "40.0.0",
+    "typescript": "7.0.2"
+  }
+}

@@ -1,0 +1,10 @@
+node_modules/
+data/
+public/vendor/
+importmap.local.json
+test-results/
+playwright-report/
+coverage/
+.env
+*.log
+.lighthouseci/
