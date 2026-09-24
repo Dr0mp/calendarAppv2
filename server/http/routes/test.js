@@ -23,6 +23,8 @@ testRoutes.get('/test/outbox', (c) => c.json({ items: c.get('app').mailer.outbox
 
 testRoutes.post('/test/reset-demo', async (c) => {
   await c.get('app').resetDemo();
+  // Tests sign in to the demo many times from one IP; start each from a clean slate.
+  c.get('app').authDb.prepare("DELETE FROM rate_limits WHERE key LIKE 'demo:%' OR key LIKE 'upload-ip:%'").run();
   return c.json({ ok: true });
 });
 

@@ -23,6 +23,7 @@ import { importSeedMedia } from './services/media.js';
  *   mailer: import('./auth/email.js').Mailer,
  *   shell?: {html: string, scriptHash: string, cdnHost: string},
  *   setupLink?: string|null,
+ *   fetchFavicon?: (domain: string) => Promise<Buffer|null>,
  *   resetDemo: () => Promise<void>,
  *   close: () => void,
  * }} App

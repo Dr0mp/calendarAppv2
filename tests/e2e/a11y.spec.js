@@ -36,6 +36,12 @@ test.describe('accessibility', () => {
         '/admin/users',
         '/admin/spaces',
         '/admin/settings',
+        '/social?view=year',
+        '/social?view=month',
+        '/social?view=list',
+        '/social?edit=new',
+        '/social/platforms',
+        '/social/standards',
       ]) {
         await page.goto(url);
         await page.waitForLoadState('networkidle');

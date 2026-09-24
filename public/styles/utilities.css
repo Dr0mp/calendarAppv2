@@ -1,4 +1,12 @@
 @layer utilities {
+  .me-auto {
+    margin-inline-end: auto;
+  }
+
+  .text-strong {
+    color: var(--text-strong);
+  }
+
   .sr-only {
     position: absolute;
     inline-size: 1px;

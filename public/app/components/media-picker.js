@@ -4,19 +4,12 @@ import { api, errorText, upload } from '../api.js';
 import { Modal } from './overlay.js';
 import { Button, EmptyState, Icon, Progress, SearchField, SkeletonList, Tabs } from './ui.js';
 import { toast } from './toast.js';
+import { fmtBytes } from '../time.js';
 
 const ACCEPT = {
   image: 'image/jpeg,image/png,image/webp,image/gif,image/avif',
   video: 'video/mp4,video/quicktime,video/webm',
 };
-
-/** @param {number} n */
-export function fmtBytes(n) {
-  if (n < 1024) return `${n} B`;
-  if (n < 1024 ** 2) return `${(n / 1024).toFixed(0)} KB`;
-  if (n < 1024 ** 3) return `${(n / 1024 ** 2).toFixed(1).replace('.', ',')} MB`;
-  return `${(n / 1024 ** 3).toFixed(2).replace('.', ',')} GB`;
-}
 
 /**
  * @typedef {{key: string, name: string, size: number, progress: number, status: 'uploading'|'done'|'error', error?: string, media?: any}} UploadItem
@@ -221,9 +214,9 @@ export function fitFrame(w, h, ratio = 16 / 9) {
 /**
  * "Decupează la 16:9": a draggable 16:9 frame over the image; the server
  * crops and stores a new media record.
- * @param {{open: boolean, media: any, onClose: () => void, onDone: (m: any) => void, ratio?: number}} p
+ * @param {{open: boolean, media: any, onClose: () => void, onDone: (m: any) => void, ratio?: number, title?: string}} p
  */
-export function CropDialog({ open, media, onClose, onDone, ratio = 16 / 9 }) {
+export function CropDialog({ open, media, onClose, onDone, ratio = 16 / 9, title }) {
   const W = media?.width ?? 0;
   const H = media?.height ?? 0;
   const [scale, setScale] = useState(100);
@@ -297,7 +290,7 @@ export function CropDialog({ open, media, onClose, onDone, ratio = 16 / 9 }) {
   };
 
   const pct = (/** @type {number} */ v, /** @type {number} */ of) => `${(v / of) * 100}%`;
-  return html`<${Modal} open=${open} onClose=${onClose} title=${t('media.cropTitle')} size="lg"
+  return html`<${Modal} open=${open} onClose=${onClose} title=${title ?? t('media.cropTitle')} size="lg"
     footer=${html`<${Button} onClick=${onClose}>${t('common.cancel')}</${Button}>
       <${Button} variant="primary" icon="crop" busy=${busy} onClick=${save}>${t('media.cropSave')}</${Button}>`}>
     ${media && html`<div class="stack">

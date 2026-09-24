@@ -323,8 +323,9 @@
     }
 
     & .sortable-moves .btn {
-      block-size: 22px;
+      block-size: 24px;
       inline-size: 26px;
+      min-block-size: 24px;
     }
   }
 

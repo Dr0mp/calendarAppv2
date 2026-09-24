@@ -237,7 +237,8 @@
       pointer-events: none;
     }
 
-    &:has(> .input-lead) > .input {
+    &:has(> .input-lead) > .input,
+    &:has(> .input-lead) > .select {
       padding-inline-start: var(--space-9);
     }
   }
@@ -1240,6 +1241,15 @@
   .table {
     inline-size: 100%;
     font-size: var(--text-md);
+
+    /* Row headers read like cells, not like column captions. */
+    & tbody th {
+      text-transform: none;
+      letter-spacing: normal;
+      font-size: inherit;
+      color: var(--text-strong);
+      white-space: normal;
+    }
 
     & th {
       text-align: start;

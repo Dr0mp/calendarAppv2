@@ -321,6 +321,7 @@ const REFERENCED = `
   SELECT cover_media_id AS id FROM entries WHERE cover_media_id IS NOT NULL
   UNION SELECT media_id FROM post_media WHERE media_id IS NOT NULL
   UNION SELECT icon_media_id FROM platforms WHERE icon_media_id IS NOT NULL
+  UNION SELECT favicon_media_id FROM platforms WHERE favicon_media_id IS NOT NULL
   UNION SELECT value FROM settings WHERE key = 'sample_cover_media_id'`;
 
 /**
