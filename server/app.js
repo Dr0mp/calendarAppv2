@@ -3,7 +3,7 @@ import path from 'node:path';
 import { openAuth, openWorkspace } from './db/open.js';
 import { createMailer } from './auth/email.js';
 import { getSetting } from './services/settings.js';
-import { bootstrapAccounts } from './services/bootstrap.js';
+import { bootstrapAccounts, restoreSeedUsers } from './services/bootstrap.js';
 import { seedWorkspace } from './seed/seed.js';
 import { importSeedMedia } from './services/media.js';
 
@@ -75,6 +75,7 @@ export async function createApp(config, log) {
     async resetDemo() {
       app.workspaces.demo.db.close();
       removeWorkspaceFiles(config, 'demo');
+      restoreSeedUsers(authDb);
       app.workspaces.demo = makeWorkspace(config, 'demo');
       seedWorkspace(app, app.workspaces.demo);
       await importSeedMedia(app, app.workspaces.demo);

@@ -151,7 +151,7 @@ export function setPasswordHash(db, id, hash) {
  */
 export function assertRoleChangeAllowed(target, role) {
   if (target.is_root && role !== 'admin') throw forbidden('root_protected');
-  if (target.is_demo || target.is_seed) throw forbidden('demo_forbidden');
+  if (target.is_demo) throw forbidden('demo_forbidden');
 }
 
 /** @param {Db} db @param {any} target @param {'active'|'disabled'} status @param {string} actorId */

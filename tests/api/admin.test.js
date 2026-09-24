@@ -186,7 +186,7 @@ describe('users', () => {
 });
 
 describe('demo isolation for users', () => {
-  test('demo admin sees only demo and seed users and cannot change them', async () => {
+  test('demo admin sees only demo and seed users; real users stay hidden', async () => {
     const d = new Client(t.http, '10.8.9.1');
     await d.demo('demo_admin');
     const list = (await d.get('/users')).data.items;
@@ -194,9 +194,61 @@ describe('demo isolation for users', () => {
     assert.ok(list.every((/** @type {any} */ u) => u.isDemo || u.isSeed));
     const dir = (await d.get('/users/directory')).data.items;
     assert.ok(!dir.some((/** @type {any} */ u) => u.name === 'boss'));
-    assert.equal((await d.post('/users', { name: 'X', username: 'xdemo', email: 'x@d.ro', role: 'user' })).data.error.code, 'demo_forbidden');
     const real = (await admin.get('/users')).data.items[0];
     assert.equal((await d.get(`/users/${real.id}`)).status, 404);
+    assert.equal((await d.patch(`/users/${real.id}`, { name: 'x' }, real.version)).status, 404);
+  });
+
+  test('demo admin adds, edits and deletes demo-only people; everything else stays locked', async () => {
+    const d = new Client(t.http, '10.8.9.2');
+    await d.demo('demo_admin');
+    // Add: a test person with no email, no password, no link.
+    const r = await d.post('/users', { name: 'Maria Test', username: 'maria.test', email: 'maria@real.example', role: 'moderator' });
+    assert.equal(r.status, 201, JSON.stringify(r.data));
+    assert.equal(r.data.demo, true);
+    assert.equal(r.data.link, null);
+    const maria = r.data.user;
+    assert.equal(maria.username, 'seed.maria.test');
+    assert.equal(maria.email, null, 'the address is not kept');
+    assert.deepEqual([maria.isSeed, maria.status, maria.role], [true, 'active', 'moderator']);
+    assert.equal(t.outbox().filter((m) => m.to === 'maria@real.example').length, 0, 'no email sent');
+    // A username a real account uses is never revealed: the demo one just differs.
+    assert.equal((await d.post('/users', { name: 'Boss', username: 'boss', role: 'user' })).data.user.username, 'seed.boss');
+    // Real admins never see demo people.
+    assert.ok(!(await admin.get('/users')).data.items.some((/** @type {any} */ u) => u.id === maria.id));
+
+    // Edit and disable.
+    const e1 = await d.patch(`/users/${maria.id}`, { name: 'Maria Ionescu', role: 'user', color: 'owner-3' }, maria.version);
+    assert.equal(e1.status, 200, JSON.stringify(e1.data));
+    assert.equal(e1.data.name, 'Maria Ionescu');
+    const e2 = await d.patch(`/users/${maria.id}`, { status: 'disabled' }, e1.data.version);
+    assert.equal(e2.data.status, 'disabled');
+    assert.equal((await d.patch(`/users/${maria.id}`, { email: 'a@b.ro' }, e2.data.version)).data.error.code, 'demo_forbidden');
+    assert.equal((await d.patch(`/users/${maria.id}`, { username: 'other' }, e2.data.version)).data.error.code, 'demo_forbidden');
+
+    // Demo accounts, links, passkeys and sessions stay locked.
+    const me = (await d.get('/users')).data.items.find((/** @type {any} */ u) => u.username === 'demo');
+    assert.equal((await d.patch(`/users/${me.id}`, { name: 'x' }, me.version)).data.error.code, 'demo_forbidden');
+    assert.equal((await d.post(`/users/${maria.id}/reset-link`, {})).status, 403);
+    assert.equal((await d.req('DELETE', `/users/${maria.id}/sessions`)).status, 403);
+
+    // A sample person with upcoming demo entries needs a transfer, inside the demo.
+    const anca = (await d.get('/users')).data.items.find((/** @type {any} */ u) => u.username === 'seed.anca');
+    if (anca.upcoming > 0) {
+      assert.equal((await d.req('DELETE', `/users/${anca.id}`, { version: anca.version, body: {} })).data.error.code, 'has_upcoming_entries');
+    }
+    const alex = (await d.get('/users')).data.items.find((/** @type {any} */ u) => u.username === 'seed.alex');
+    assert.equal((await d.req('DELETE', `/users/${anca.id}`, { version: anca.version, body: { transferTo: maria.id } })).data.error.code, 'transfer_target_invalid', 'disabled');
+    const del = await d.req('DELETE', `/users/${anca.id}`, { version: anca.version, body: { transferTo: alex.id } });
+    assert.equal(del.status, 200, JSON.stringify(del.data));
+
+    // The demo reset removes added people and restores the sample ones.
+    await t.app.resetDemo();
+    const d2 = new Client(t.http, '10.8.9.4');
+    await d2.demo('demo_admin');
+    const names = (await d2.get('/users')).data.items.map((/** @type {any} */ u) => u.username).sort();
+    assert.ok(names.includes('seed.anca'), 'sample person restored');
+    assert.ok(!names.includes('seed.maria.test') && !names.includes('seed.boss'), 'added people removed');
   });
 });
 

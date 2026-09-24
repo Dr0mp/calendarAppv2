@@ -17,6 +17,15 @@ export const InviteUser = z.strictObject({
   color: ownerColor.optional(),
 });
 
+/** Demo: a test person without an email address. */
+export const DemoInviteUser = z.strictObject({
+  name: text(80),
+  username,
+  email: z.string().optional(),
+  role,
+  color: ownerColor.optional(),
+});
+
 export const UpdateUser = z.strictObject({
   name: text(80).optional(),
   username: username.optional(),

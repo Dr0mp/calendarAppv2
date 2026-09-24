@@ -504,7 +504,14 @@
     "migratedNeverTitle": "{n, plural, one {# cont migrat nu s-a autentificat încă} few {# conturi migrate nu s-au autentificat încă} other {# de conturi migrate nu s-au autentificat încă}}",
     "migratedNeverText": "Au trecut 90 de zile de la import. Trimiteți acestor persoane un link de resetare a parolei din pagina Utilizatori.",
     "openUsers": "Deschide Utilizatori",
-    "legacyPassword": "Parolă din versiunea veche"
+    "legacyPassword": "Parolă din versiunea veche",
+    "addDemoPerson": "Adaugă persoană de test",
+    "demoUsersTitle": "Persoane de test în modul demonstrativ",
+    "demoUsersText": "Poți adăuga, edita, dezactiva și șterge persoane de test. Nu primesc email, nu se pot autentifica și dispar la resetarea demo-ului. Conturile demo (Demo Utilizator, Demo Administrator) nu pot fi modificate.",
+    "inviteIntroDemo": "În demo nu se trimite nicio invitație: persoana apare imediat în listă, fără email și fără parolă.",
+    "demoPersonAdded": "{name} a fost adăugat(ă) (doar în demo).",
+    "demoUsernameLocked": "În demo, numele de utilizator nu se poate schimba.",
+    "demoLockedHint": "Conturile demo nu pot fi modificate."
   },
   "entryType": {
     "event": "Eveniment public",

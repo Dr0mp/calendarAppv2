@@ -1,4 +1,4 @@
-import { test, expect, signIn, ensureUser, expectPhoneLayout } from './helpers.js';
+import { test, expect, signIn, signOut, ensureUser, expectPhoneLayout, demoAdmin } from './helpers.js';
 
 const PW = 'o parolă lungă și sigură';
 
@@ -132,4 +132,39 @@ test('the style guide renders both themes', async ({ page }) => {
   // Tokens resolve differently in each scope.
   const [light, dark] = await page.$$eval('.sg-theme', (els) => els.map((e) => getComputedStyle(e).backgroundColor));
   expect(light).not.toBe(dark);
+});
+
+test('demo: the demo admin adds, edits and deletes a test person', async ({ page, request }) => {
+  await signOut(page);
+  await demoAdmin(page, request);
+  await page.goto('/admin/users');
+  await expect(page.getByText('Persoane de test în modul demonstrativ')).toBeVisible();
+  await page.getByRole('button', { name: 'Adaugă persoană de test' }).click();
+  const dlg = page.getByRole('dialog', { name: 'Adaugă persoană de test' });
+  await expect(dlg.getByLabel('Email')).toHaveCount(0);
+  await dlg.getByRole('textbox', { name: 'Nume', exact: true }).fill('Maria Test');
+  await dlg.getByRole('button', { name: 'Adaugă persoană de test' }).click();
+  await expect(page.getByText('Maria Test a fost adăugat(ă) (doar în demo).')).toBeVisible();
+  const row = page.getByRole('row', { name: /Maria Test/ });
+  await expect(row).toContainText('@seed.maria.test');
+
+  await row.getByRole('button', { name: 'Editează' }).click();
+  const edit = page.getByRole('dialog', { name: /Maria Test/ });
+  await expect(edit.getByLabel('Nume utilizator')).toBeDisabled();
+  await edit.getByRole('textbox', { name: 'Nume', exact: true }).fill('Maria Ionescu');
+  await edit.getByLabel('Rol').selectOption('moderator');
+  await edit.getByRole('button', { name: 'Salvează' }).click();
+  const renamed = page.getByRole('row', { name: /Maria Ionescu/ });
+  await expect(renamed.getByText('Moderator')).toBeVisible();
+
+  // The demo accounts themselves stay locked.
+  await expect(page.getByRole('row', { name: /Demo Administrator/ }).getByRole('button', { name: 'Editează' })).toBeDisabled();
+
+  await renamed.getByRole('button', { name: /Mai multe acțiuni/ }).click();
+  await expect(page.getByRole('menuitem', { name: /link/i })).toHaveCount(0);
+  await page.getByRole('menuitem', { name: 'Șterge' }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Șterge utilizatorul' }).click();
+  await expect(page.getByText('Utilizatorul a fost șters.')).toBeVisible();
+  await expect(page.getByRole('row', { name: /Maria Ionescu/ })).toHaveCount(0);
+  await expectPhoneLayout(page);
 });

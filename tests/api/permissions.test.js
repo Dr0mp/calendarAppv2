@@ -67,8 +67,9 @@ export const ADMIN_ROWS = [
   ['POST', '/spaces/reorder', { ids: ['00000000-0000-7000-8000-000000000000'] }, { anon: 401, user: 403, moderator: 403, admin: 200 }],
   ['GET', '/users/directory', undefined, { anon: 401, user: 200, moderator: 200, admin: 200, demo: 200, demo_admin: 200 }],
   ['GET', '/users', undefined, { anon: 401, user: 403, moderator: 403, admin: 200, demo: 403, demo_admin: 200 }],
+  // In the demo, the demo admin adds a demo-only person (no email, no sign-in).
   ['POST', '/users', { name: 'M', username: 'matrix.x', email: 'mx@example.com', role: 'user' },
-    { anon: 401, user: 403, moderator: 403, demo: 403, demo_admin: 403 }],
+    { anon: 401, user: 403, moderator: 403, demo: 403, demo_admin: 201 }],
   ['GET', '/settings', undefined, { anon: 401, user: 403, moderator: 403, admin: 200, demo: 403, demo_admin: 200 }],
   ['PATCH', '/settings', { org_name: 'Casa Artis' }, { anon: 401, user: 403, moderator: 403, admin: 200, demo: 403, demo_admin: 403 }],
   ['POST', '/settings/test-email', {}, { anon: 401, user: 403, moderator: 403, demo: 403, demo_admin: 403 }],

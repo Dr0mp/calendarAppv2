@@ -504,7 +504,14 @@
     "migratedNeverTitle": "{n, plural, one {# migrated account hasn't signed in yet} other {# migrated accounts haven't signed in yet}}",
     "migratedNeverText": "It's been 90 days since the import. Send these people a password reset link from the Users page.",
     "openUsers": "Open Users",
-    "legacyPassword": "Password from the old version"
+    "legacyPassword": "Password from the old version",
+    "addDemoPerson": "Add test person",
+    "demoUsersTitle": "Test people in demo mode",
+    "demoUsersText": "You can add, edit, disable and delete test people. They get no email, can't sign in and disappear when the demo resets. The demo accounts (Demo User, Demo Administrator) can't be changed.",
+    "inviteIntroDemo": "No invitation is sent in the demo: the person appears in the list straight away, with no email and no password.",
+    "demoPersonAdded": "{name} added (demo only).",
+    "demoUsernameLocked": "In the demo, the username can't be changed.",
+    "demoLockedHint": "Demo accounts can't be changed."
   },
   "entryType": {
     "event": "Public event",

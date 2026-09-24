@@ -40,12 +40,32 @@ export async function bootstrapAccounts(app) {
       if (!existing) insertUser(db, { ...d, isDemo: true, status: 'active' });
       else if (!existing.is_demo) app.log.warn({ username: d.username }, 'a real account uses a demo username; demo sign-in disabled for it');
     }
-    for (const s of sample.seedUsers) {
-      if (!findByLogin(db, s.username)) {
-        insertUser(db, { username: s.username, name: s.name, role: s.role, color: s.color, isSeed: true, status: 'active' });
-      }
-    }
+    restoreSeedUsers(db);
     if (!config.demoEnabled) db.prepare("DELETE FROM sessions WHERE workspace = 'demo'").run();
   });
   return { setupLink };
+}
+
+/**
+ * The demo's fictitious people: remove any the demo admin added, and put the
+ * sample ones (Anca, Alex, Ioana) back as they were. Runs at start and on
+ * every demo reset.
+ * @param {import('../db/open.js').Db} db auth database
+ */
+export function restoreSeedUsers(db) {
+  db.tx(() => {
+    const keep = sample.seedUsers.map((s) => s.username);
+    const extra = /** @type {any[]} */ (db.prepare('SELECT id, username FROM users WHERE is_seed = 1').all()).filter((u) => !keep.includes(u.username));
+    for (const u of extra) db.prepare('DELETE FROM users WHERE id = ?').run(u.id);
+    for (const s of sample.seedUsers) {
+      const cur = findByLogin(db, s.username);
+      if (!cur) insertUser(db, { username: s.username, name: s.name, role: s.role, color: s.color, isSeed: true, status: 'active' });
+      else if (cur.is_seed) {
+        db.prepare(
+          `UPDATE users SET name = ?, role = ?, color = ?, status = 'active', initials = NULL, email = NULL, version = version + 1
+           WHERE id = ? AND (name <> ? OR role <> ? OR color <> ? OR status <> 'active' OR initials IS NOT NULL OR email IS NOT NULL)`,
+        ).run(s.name, s.role, s.color, cur.id, s.name, s.role, s.color);
+      }
+    }
+  });
 }

@@ -18,6 +18,10 @@ export default function Users() {
   const [emailOn, setEmailOn] = useState(false);
   const [q, setQ] = useState('');
   const [dialog, setDialog] = useState(/** @type {null | {kind: string, user?: any, link?: string, purpose?: string}} */ (null));
+  // In the demo, the demo admin manages demo-only people (no email, no sign-in).
+  const demo = !!me.value?.isDemo;
+  /** @param {any} u */
+  const canManage = (u) => (demo ? u.isSeed : !(u.isDemo || u.isSeed));
 
   const load = async () => {
     const r = await api('GET', '/users');
@@ -116,12 +120,13 @@ export default function Users() {
     {
       key: 'actions', label: t('common.actions'), actions: true,
       render: (/** @type {any} */ u) => html`<div class="cluster" style=${{ justifyContent: 'flex-end', flexWrap: 'nowrap' }}>
-        <${Button} size="sm" icon="pencil" onClick=${() => setDialog({ kind: 'edit', user: u })} disabled=${u.isDemo || u.isSeed || me.value?.isDemo}>${t('common.edit')}</${Button}>
+        <${Button} size="sm" icon="pencil" onClick=${() => setDialog({ kind: 'edit', user: u })} disabled=${!canManage(u)}
+          title=${canManage(u) ? undefined : t('admin.demoLockedHint')}>${t('common.edit')}</${Button}>
         <${Popover} align="end" label=${t('common.moreActions')} trigger=${(/** @type {any} */ p) => html`<button type="button" class="btn btn--ghost btn--icon btn--sm"
           ref=${p.ref} onClick=${p.toggle} aria-expanded=${p['aria-expanded']} aria-haspopup="menu" aria-label=${t('common.moreActionsFor', { name: u.name })}
-          disabled=${u.isDemo || u.isSeed || me.value?.isDemo}><${Icon} name="ellipsis" /></button>`}>
+          disabled=${!canManage(u)}><${Icon} name="ellipsis" /></button>`}>
           ${(/** @type {() => void} */ close) => html`<div class="menu" role="menu" onKeyDown=${menuKeys}>
-            ${u.status === 'invited' && html`
+            ${!demo && html`${u.status === 'invited' && html`
               ${emailOn && u.email && html`<${MenuItem} icon="send" onClick=${() => (close(), link(u, 'invite', true))}>${t('admin.resendInvite')}</${MenuItem}>`}
               <${MenuItem} icon="link" onClick=${() => (close(), link(u, 'invite', false))}>${t('admin.copyInviteLink')}</${MenuItem}>`}
             ${u.status === 'active' && html`
@@ -131,8 +136,8 @@ export default function Users() {
             <${MenuItem} icon="log-out" onClick=${() => (close(), revokeSessions(u))}>${t('admin.revokeSessions')}</${MenuItem}>
             <${MenuItem} icon="download" onClick=${() => (close(), exportData(u))}>${t('admin.exportData')}</${MenuItem}>
             ${me.value?.isRoot && u.role === 'admin' && u.status === 'active' && !u.isRoot &&
-            html`<${MenuItem} icon="star" onClick=${() => (close(), transferRoot(u))}>${t('admin.transferRoot')}</${MenuItem}>`}
-            ${!u.isRoot && u.id !== me.value?.id && html`<hr />
+            html`<${MenuItem} icon="star" onClick=${() => (close(), transferRoot(u))}>${t('admin.transferRoot')}</${MenuItem}>`}`}
+            ${!u.isRoot && u.id !== me.value?.id && html`${!demo && html`<hr />`}
               ${u.status !== 'invited' && html`<${MenuItem} icon=${u.status === 'active' ? 'ban' : 'check'} onClick=${() => (close(), toggleStatus(u))}>
                 ${u.status === 'active' ? t('admin.disable') : t('admin.enable')}</${MenuItem}>`}
               <${MenuItem} icon="trash-2" danger onClick=${() => (close(), setDialog({ kind: 'delete', user: u }))}>${t('common.delete')}</${MenuItem}>`}
@@ -145,8 +150,9 @@ export default function Users() {
   return html`<div class="stack">
     <div class="page-head">
       <h1>${t('admin.users')}</h1>
-      <${Button} variant="primary" icon="user-plus" onClick=${() => setDialog({ kind: 'invite' })} disabled=${me.value?.isDemo}>${t('admin.inviteUser')}</${Button}>
+      <${Button} variant="primary" icon="user-plus" onClick=${() => setDialog({ kind: 'invite' })}>${demo ? t('admin.addDemoPerson') : t('admin.inviteUser')}</${Button}>
     </div>
+    ${demo && html`<${Alert} tone="info" icon="sparkles" title=${t('admin.demoUsersTitle')}>${t('admin.demoUsersText')}</${Alert}>`}
     <${SearchField} value=${q} onInput=${setQ} placeholder=${t('admin.searchUsers')} class="toolbar-search" />
     ${items === null
       ? html`<${SkeletonList} rows=${5} />`
@@ -154,24 +160,27 @@ export default function Users() {
           empty=${html`<${EmptyState} icon="search" title=${t('common.noResults')} text=${t('common.noResultsText')}
             action=${html`<${Button} onClick=${() => setQ('')}>${t('common.clearSearch')}</${Button}>`} />`} />`}
 
-    ${dialog?.kind === 'invite' && html`<${InviteDialog} emailOn=${emailOn} onClose=${() => setDialog(null)}
+    ${dialog?.kind === 'invite' && html`<${InviteDialog} emailOn=${emailOn} demo=${demo} onClose=${() => setDialog(null)}
       onDone=${(/** @type {any} */ r) => {
         load();
-        if (r.link) setDialog({ kind: 'link', user: r.user, link: r.link, purpose: 'invite' });
+        if (r.demo) {
+          toast('success', t('admin.demoPersonAdded', { name: r.user.name }));
+          setDialog(null);
+        } else if (r.link) setDialog({ kind: 'link', user: r.user, link: r.link, purpose: 'invite' });
         else {
           toast('success', t('admin.inviteSent', { email: r.user.email }));
           setDialog(null);
         }
       }} />`}
-    ${dialog?.kind === 'edit' && html`<${EditDialog} user=${dialog.user} onClose=${() => setDialog(null)} onDone=${() => (setDialog(null), load())} />`}
+    ${dialog?.kind === 'edit' && html`<${EditDialog} user=${dialog.user} demo=${demo} onClose=${() => setDialog(null)} onDone=${() => (setDialog(null), load())} />`}
     ${dialog?.kind === 'delete' && html`<${DeleteDialog} user=${dialog.user} users=${items ?? []} onClose=${() => setDialog(null)}
       onDone=${() => (setDialog(null), toast('success', t('admin.userDeleted')), load())} />`}
     ${dialog?.kind === 'link' && html`<${LinkDialog} user=${dialog.user} link=${dialog.link} purpose=${dialog.purpose} onClose=${() => setDialog(null)} />`}
   </div>`;
 }
 
-/** @param {{emailOn: boolean, onClose: () => void, onDone: (r: any) => void}} p */
-function InviteDialog({ emailOn, onClose, onDone }) {
+/** @param {{emailOn: boolean, demo?: boolean, onClose: () => void, onDone: (r: any) => void}} p */
+function InviteDialog({ emailOn, demo, onClose, onDone }) {
   const [f, setF] = useState({ name: '', username: '', email: '', role: 'user' });
   const [errors, setErrors] = useState(/** @type {Record<string,string>} */ ({}));
   const [busy, setBusy] = useState(false);
@@ -191,7 +200,9 @@ function InviteDialog({ emailOn, onClose, onDone }) {
     setBusy(true);
     setErrors({});
     try {
-      onDone(await api('POST', '/users', { body: { ...f, name: f.name.trim(), username: f.username.trim(), email: f.email.trim() } }));
+      const body = { ...f, name: f.name.trim(), username: f.username.trim(), email: f.email.trim() };
+      if (demo) delete (/** @type {any} */ (body)).email;
+      onDone(await api('POST', '/users', { body }));
     } catch (err) {
       if (err instanceof ApiError) {
         setErrors(fieldErrors(err));
@@ -202,22 +213,22 @@ function InviteDialog({ emailOn, onClose, onDone }) {
     }
   }
 
-  return html`<${Modal} open onClose=${onClose} title=${t('admin.inviteUser')}
+  return html`<${Modal} open onClose=${onClose} title=${demo ? t('admin.addDemoPerson') : t('admin.inviteUser')}
     footer=${html`<${Button} onClick=${onClose}>${t('common.cancel')}</${Button}>
-      <${Button} variant="primary" type="submit" form="invite-form" busy=${busy} icon="send">${t('admin.sendInvite')}</${Button}>`}>
+      <${Button} variant="primary" type="submit" form="invite-form" busy=${busy} icon=${demo ? 'user-plus' : 'send'}>${demo ? t('admin.addDemoPerson') : t('admin.sendInvite')}</${Button}>`}>
     <form id="invite-form" class="stack" onSubmit=${submit} noValidate>
-      <p class="muted small">${emailOn ? t('admin.inviteIntroEmail') : t('admin.inviteIntroNoEmail')}</p>
+      <p class="muted small">${demo ? t('admin.inviteIntroDemo') : emailOn ? t('admin.inviteIntroEmail') : t('admin.inviteIntroNoEmail')}</p>
       <${Field} label=${t('account.name')} error=${errors.name} required>${(/** @type {any} */ a) => html`<${Input} ...${a} value=${f.name} onInput=${(/** @type {string} */ v) => set('name', v)} autocomplete="off" />`}</${Field}>
       <${Field} label=${t('auth.username')} error=${errors.username} hint=${t('admin.usernameHint')} required>${(/** @type {any} */ a) => html`<${Input} ...${a} value=${f.username} onInput=${(/** @type {string} */ v) => set('username', v.toLowerCase())} autocapitalize="none" spellcheck="false" />`}</${Field}>
-      <${Field} label=${t('account.email')} error=${errors.email} required>${(/** @type {any} */ a) => html`<${Input} ...${a} type="email" value=${f.email} onInput=${(/** @type {string} */ v) => set('email', v)} />`}</${Field}>
+      ${!demo && html`<${Field} label=${t('account.email')} error=${errors.email} required>${(/** @type {any} */ a) => html`<${Input} ...${a} type="email" value=${f.email} onInput=${(/** @type {string} */ v) => set('email', v)} />`}</${Field}>`}
       <${Field} label=${t('admin.colRole')}>${(/** @type {any} */ a) => html`<${Select} ...${a} value=${f.role} onChange=${(/** @type {string} */ v) => set('role', v)}
         options=${ROLES.map((r) => ({ value: r, label: t(`roles.${r}`) }))} />`}</${Field}>
     </form>
   </${Modal}>`;
 }
 
-/** @param {{user: any, onClose: () => void, onDone: () => void}} p */
-function EditDialog({ user: u, onClose, onDone }) {
+/** @param {{user: any, demo?: boolean, onClose: () => void, onDone: () => void}} p */
+function EditDialog({ user: u, demo, onClose, onDone }) {
   const [f, setF] = useState({ name: u.name, username: u.username, email: u.email ?? '', role: u.role, color: u.color, initials: u.initials ?? '' });
   const [errors, setErrors] = useState(/** @type {Record<string,string>} */ ({}));
   const [busy, setBusy] = useState(false);
@@ -231,8 +242,10 @@ function EditDialog({ user: u, onClose, onDone }) {
     setBusy(true);
     setErrors({});
     try {
-      const body = { name: f.name.trim(), email: f.email.trim() || null, role: f.role, color: f.color, initials: f.initials.trim() || null };
-      if (!u.isRoot) Object.assign(body, { username: f.username.trim() });
+      /** @type {Record<string, any>} */
+      const body = { name: f.name.trim(), role: f.role, color: f.color, initials: f.initials.trim() || null };
+      if (!demo) body.email = f.email.trim() || null;
+      if (!u.isRoot && !demo) body.username = f.username.trim();
       await api('PATCH', `/users/${u.id}`, { body, version });
       toast('success', t('common.saved'));
       onDone();
@@ -261,12 +274,12 @@ function EditDialog({ user: u, onClose, onDone }) {
       </div>
       <${Field} label=${t('account.name')} error=${errors.name} required>${(/** @type {any} */ a) => html`<${Input} ...${a} value=${f.name} onInput=${(/** @type {string} */ v) => set('name', v)} />`}</${Field}>
       <div class="field-row">
-        <${Field} label=${t('auth.username')} error=${errors.username} hint=${u.isRoot ? t('admin.rootUsernameLocked') : t('admin.usernameRenameHint')}>
-          ${(/** @type {any} */ a) => html`<${Input} ...${a} value=${f.username} disabled=${u.isRoot} onInput=${(/** @type {string} */ v) => set('username', v.toLowerCase())} autocapitalize="none" />`}</${Field}>
+        <${Field} label=${t('auth.username')} error=${errors.username} hint=${demo ? t('admin.demoUsernameLocked') : u.isRoot ? t('admin.rootUsernameLocked') : t('admin.usernameRenameHint')}>
+          ${(/** @type {any} */ a) => html`<${Input} ...${a} value=${f.username} disabled=${u.isRoot || demo} onInput=${(/** @type {string} */ v) => set('username', v.toLowerCase())} autocapitalize="none" />`}</${Field}>
         <${Field} label=${t('admin.initials')} error=${errors.initials} hint=${t('admin.initialsHint')}>
           ${(/** @type {any} */ a) => html`<${Input} ...${a} value=${f.initials} maxLength="3" onInput=${(/** @type {string} */ v) => set('initials', v.toUpperCase())} />`}</${Field}>
       </div>
-      <${Field} label=${t('account.email')} error=${errors.email}>${(/** @type {any} */ a) => html`<${Input} ...${a} type="email" value=${f.email} onInput=${(/** @type {string} */ v) => set('email', v)} />`}</${Field}>
+      ${!demo && html`<${Field} label=${t('account.email')} error=${errors.email}>${(/** @type {any} */ a) => html`<${Input} ...${a} type="email" value=${f.email} onInput=${(/** @type {string} */ v) => set('email', v)} />`}</${Field}>`}
       <${Field} label=${t('admin.colRole')} error=${errors.role} hint=${u.isRoot ? t('admin.rootRoleLocked') : t('admin.roleChangeHint')}>
         ${(/** @type {any} */ a) => html`<${Select} ...${a} value=${f.role} disabled=${u.isRoot} onChange=${(/** @type {string} */ v) => set('role', v)}
           options=${ROLES.map((r) => ({ value: r, label: t(`roles.${r}`) }))} />`}</${Field}>

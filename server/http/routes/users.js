@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import { body, ifMatch, requireAdmin, requireUser, withVersion, wsOf } from '../app.js';
 import { ApiError, conflict, forbidden, notFound } from '../errors.js';
-import { DeleteUser, InviteUser, LinkRequest, UpdateUser } from '../../../shared/schemas/user.js';
+import { DeleteUser, DemoInviteUser, InviteUser, LinkRequest, UpdateUser } from '../../../shared/schemas/user.js';
 import {
   assertRoleChangeAllowed, directoryView, insertUser, loadUser, setStatus, updateUser, visibilityClause, initialsOf,
 } from '../../services/users.js';
@@ -19,6 +19,28 @@ function requireRealAdmin(c) {
   const u = requireAdmin(c);
   if (u.is_demo) throw forbidden('demo_forbidden');
   return u;
+}
+
+/**
+ * Who may add, edit or delete people: real admins manage real accounts; in
+ * the demo, the demo admin manages demo-only people (seed users: no email,
+ * no password, cannot sign in, removed at the next demo reset).
+ * @param {any} c @param {any} [target]
+ */
+function requireUserManager(c, target) {
+  const u = requireAdmin(c);
+  if (u.is_demo) {
+    if (wsOf(c).name !== 'demo' || (target && !target.is_seed)) throw forbidden('demo_forbidden');
+  } else if (target && (target.is_demo || target.is_seed)) throw forbidden('demo_forbidden');
+  return u;
+}
+
+/** A free demo-only username in the seed. namespace. @param {any} db @param {string} wanted */
+function demoUsername(db, wanted) {
+  const base = (wanted.startsWith('seed.') ? wanted : `seed.${wanted}`).slice(0, 29);
+  let name = base;
+  for (let i = 2; db.prepare('SELECT 1 FROM users WHERE username = ?').get(name); i++) name = `${base}-${i}`;
+  return name;
 }
 
 /** A user visible in the caller's workspace, or 404. @param {any} c @param {string} id */
@@ -94,8 +116,17 @@ async function issueLink(c, u, purpose, send) {
 }
 
 userRoutes.post('/users', async (c) => {
-  const actor = requireRealAdmin(c);
+  const actor = requireUserManager(c);
   const app = c.get('app');
+  if (actor.is_demo) {
+    // Demo: a test person only. No email is kept or sent, no password, no sign-in.
+    const data = await body(c, DemoInviteUser);
+    const u = insertUser(app.authDb, {
+      name: data.name, username: demoUsername(app.authDb, data.username), role: data.role, color: data.color,
+      isSeed: true, status: 'active', createdBy: actor.id,
+    });
+    return c.json({ user: adminView(c, u), emailed: false, link: null, demo: true }, 201);
+  }
   const data = await body(c, InviteUser);
   const u = insertUser(app.authDb, { ...data, status: 'invited', createdBy: actor.id });
   const out = await issueLink(c, u, 'invite', true);
@@ -103,12 +134,13 @@ userRoutes.post('/users', async (c) => {
 });
 
 userRoutes.patch('/users/:id', async (c) => {
-  const actor = requireRealAdmin(c);
   const app = c.get('app');
   const target = visibleUser(c, c.req.param('id'));
+  const actor = requireUserManager(c, target);
   const patch = await body(c, UpdateUser);
   const version = ifMatch(c);
-  if (target.is_demo || target.is_seed) throw forbidden('demo_forbidden');
+  // Demo people keep their demo username and never get an email address.
+  if (actor.is_demo && ((patch.username && patch.username !== target.username) || patch.email)) throw forbidden('demo_forbidden');
   if (patch.role && patch.role !== target.role) assertRoleChangeAllowed(target, patch.role);
   if (patch.username && target.is_root && patch.username !== target.username) throw forbidden('root_protected');
   const { status, ...fields } = patch;
@@ -167,25 +199,22 @@ userRoutes.post('/users/:id/transfer-root', (c) => {
 });
 
 userRoutes.delete('/users/:id', async (c) => {
-  const actor = requireRealAdmin(c);
-  const app = c.get('app');
   const ws = wsOf(c);
   const target = visibleUser(c, c.req.param('id'));
+  const actor = requireUserManager(c, target);
   const { transferTo, keepPast } = await body(c, DeleteUser);
   const version = ifMatch(c);
   if (target.version !== version) throw conflict('version_conflict', { current: target.version });
   if (target.is_root) throw forbidden('root_protected');
   if (target.id === actor.id) throw forbidden('cannot_delete_self');
-  if (target.is_demo || target.is_seed) throw forbidden('demo_forbidden');
   const today = todayIn(ws.tz());
   /** @type {any} */ let dest = null;
   if (transferTo) {
     dest = visibleUser(c, transferTo);
     if (dest.id === target.id || dest.status === 'disabled') throw new ApiError(400, 'transfer_target_invalid');
   }
-  // Both workspaces may hold the user's content; real users only own main content,
-  // but check both so nothing is orphaned by accident.
-  const main = app.workspaces.main.db;
+  // Real people own content in main; demo people only in the demo workspace.
+  const main = ws.db;
   const upcoming = /** @type {any} */ (main.prepare('SELECT COUNT(*) AS n FROM entries WHERE owner_id = ? AND last_date >= ?').get(target.id, today)).n;
   if (upcoming && !dest) throw conflict('has_upcoming_entries', { count: upcoming });
   main.tx(() => {
