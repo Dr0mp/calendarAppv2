@@ -3,10 +3,9 @@ import { t } from '../../i18n/index.js';
 import { user, isAdmin } from '../../state/session.js';
 import { directory, loadVenues } from '../../state/venues.js';
 import { invalidateEntries } from '../../state/entries.js';
-import { refreshCounts } from '../../state/counts.js';
 import { api, ApiError } from '../../api.js';
 import { Alert, Avatar, Badge, Button, Icon, SafeImg, Select, Skeleton } from '../../components/ui.js';
-import { Modal, confirm } from '../../components/overlay.js';
+import { Modal } from '../../components/overlay.js';
 import { toast } from '../../components/toast.js';
 import { RichText } from '../../components/richtext.js';
 import { fmtDateLong, fmtDayMonth, fmtMoney, fmtInstant } from '../../time.js';
@@ -21,8 +20,8 @@ export function priceText(e) {
   return e.price_note ? `${base} · ${e.price_note}` : base;
 }
 
-/** @param {any} e */
-export const entryTitle = (e) => e.title ?? t('entry.roomBooking');
+import { deleteEntryFlow } from './actions.js';
+export { entryTitle } from './detail-title.js';
 
 /**
  * The entry detail body (used by the panel, the phone sheet and /entries/:id).
@@ -52,22 +51,9 @@ export function EntryDetail({ id, onClose, onChanged, onLoaded }) {
   if (!e) return html`<div class="stack"><${Skeleton} h="180px" /><${Skeleton} h="24px" w="70%" /><${Skeleton} h="80px" /></div>`;
 
   async function remove() {
-    const ok = await confirm({
-      title: t('entry.deleteTitle', { title: entryTitle(e) }),
-      message: e.past ? t('entry.deletePastText') : t('entry.deleteText'),
-      confirmLabel: t('common.delete'),
-      danger: true,
-    });
-    if (!ok) return;
-    try {
-      await api('DELETE', `/entries/${e.id}`, { version: e.version, query: { scope: 'one' } });
-      toast('success', t('entry.deleted'));
-      invalidateEntries();
-      refreshCounts();
+    if (await deleteEntryFlow(e)) {
       onChanged?.();
       onClose?.();
-    } catch (err) {
-      toast('danger', err instanceof ApiError ? err.text : t('errors.generic'));
     }
   }
 
@@ -80,7 +66,7 @@ export function EntryDetail({ id, onClose, onChanged, onLoaded }) {
     <div class="stack" style=${{ '--stack-gap': 'var(--space-2)' }}>
       <div class="cluster">
         <${Badge} tone=${TYPE_TONE[e.type]} icon=${TYPE_ICON[e.type]}>${t(`entryType.${e.type}`)}</${Badge}>
-        ${e.series_id && html`<${Badge} icon="repeat">${t('entry.seriesOf', { i: (e.occurrence_index ?? 0) + 1, n: e.series_total })}</${Badge}>`}
+        ${e.series_id && html`<${Badge} icon="repeat">${t('entry.seriesOf', { freq: e.series_freq ?? '', i: (e.occurrence_index ?? 0) + 1, n: e.series_total })}</${Badge}>`}
         ${e.past && html`<${Badge}>${t('entry.past')}</${Badge}>`}
         ${e.allow_overlap && isAdmin.value && html`<${Badge} tone="warning" icon="layers">${t('entry.overlapAllowed')}</${Badge}>`}
       </div>
@@ -111,6 +97,7 @@ export function EntryDetail({ id, onClose, onChanged, onLoaded }) {
       <div><${Badge} tone=${e.promotion_status === 'promoted' ? 'success' : e.promotion_status === 'skipped' ? 'neutral' : 'warning'}>
         ${t(`entry.promo_${e.promotion_status ?? 'pending'}`)}</${Badge}></div></section>`}
 
+    ${e.series_id && html`<${SeriesList} seriesId=${e.series_id} current=${e.id} />`}
     ${!e.can_edit && html`<p class="small muted view-only"><${Icon} name="eye" /> ${t('entry.viewOnly', { name: e.owner.name })}</p>`}
     <p class="xs muted">${t('entry.updated', { when: fmtInstant(e.updated_at) })}</p>
 
@@ -153,4 +140,24 @@ function ReassignDialog({ entry, onClose, onDone }) {
         options=${users.map((u) => ({ value: u.id, label: u.name }))} />
     </div>
   </${Modal}>`;
+}
+
+/** "See all occurrences": the dates of the series, each linking to its entry. @param {{seriesId: string, current: string}} p */
+function SeriesList({ seriesId, current }) {
+  const [open, setOpen] = useState(false);
+  const [data, setData] = useState(/** @type {any} */ (null));
+  useEffect(() => {
+    if (open && !data) api('GET', `/series/${seriesId}`).then(setData).catch(() => {});
+  }, [open]);
+  return html`<section class="detail-block"><${Icon} name="repeat" />
+    <div class="stack" style=${{ '--stack-gap': 'var(--space-2)' }}>
+      <button type="button" class="link-btn small" aria-expanded=${open ? 'true' : 'false'} onClick=${() => setOpen(!open)}>${t('series.seeAll')}</button>
+      ${open && (data
+        ? html`<ul class="occurrence-list" role="list">${data.occurrences.map(
+            (/** @type {any} */ o) => html`<li><a class=${`chip ${o.id === current ? 'chip--selected' : ''}`} href=${`?entry=${o.id}`}
+              aria-current=${o.id === current ? 'true' : undefined} data-past=${o.past ? 'true' : undefined}>${fmtDayMonth(o.date)}</a></li>`,
+          )}</ul>`
+        : html`<${Skeleton} h="28px" />`)}
+    </div>
+  </section>`;
 }

@@ -51,6 +51,7 @@ export function entryView(e, viewer, tz) {
     series_id: e.series_id,
     occurrence_index: e.occurrence_index,
     series_total: e.series_id ? e.series_total : null,
+    series_freq: e.series_rule ? JSON.parse(e.series_rule).freq : null,
     allow_overlap: !!e.allow_overlap,
     first_date: e.first_date,
     last_date: e.last_date,
@@ -113,26 +114,35 @@ export function getEntryOr404(ws, id) {
 }
 
 /**
- * Check space and room conflicts inside the current transaction.
+ * Collect the space and room conflicts of a candidate (current DB state).
  * @param {Workspace} ws
  * @param {{id?: string, type: string, space_id: string|null, sessions: any[], room_bookings?: any[]}} candidate
- * @param {{actor: Actor, allowOverlap: boolean, checkRooms: boolean}} opts
+ * @param {{checkRooms: boolean, ignore?: Set<string>}} opts
  */
-export function assertNoConflicts(ws, candidate, opts) {
+export function findConflicts(ws, candidate, opts) {
   const bookings = candidate.room_bookings ?? [];
   const dates = candidate.sessions.map((s) => s.date);
   const roomFrom = bookings.length ? bookings.map((b) => b.check_in).sort()[0] : null;
   const roomTo = bookings.length ? bookings.map((b) => b.check_out).sort().at(-1) : null;
   const existing = repo
     .loadConflictCandidates(ws.db, dates, bookings.map((b) => b.room_id), roomFrom, roomTo ?? null)
+    .filter((e) => !opts.ignore?.has(e.id))
     .map(asRuleEntry);
-  if (opts.checkRooms) {
-    const rooms = findRoomConflicts(bookings, existing, candidate.id);
-    if (rooms.length) {
-      throw conflict('room_conflict', { conflicts: rooms.map(describeRoomConflict) }, 'Room booking overlaps');
-    }
-  }
-  const space = findSpaceConflicts(/** @type {any} */ (candidate), existing);
+  return {
+    rooms: opts.checkRooms ? findRoomConflicts(bookings, existing, candidate.id) : [],
+    space: findSpaceConflicts(/** @type {any} */ (candidate), existing),
+  };
+}
+
+/**
+ * Check space and room conflicts inside the current transaction.
+ * @param {Workspace} ws
+ * @param {{id?: string, type: string, space_id: string|null, sessions: any[], room_bookings?: any[]}} candidate
+ * @param {{actor: Actor, allowOverlap: boolean, checkRooms: boolean}} opts
+ */
+export function assertNoConflicts(ws, candidate, opts) {
+  const { rooms, space } = findConflicts(ws, candidate, opts);
+  if (rooms.length) throw conflict('room_conflict', { conflicts: rooms.map(describeRoomConflict) }, 'Room booking overlaps');
   if (space.length) {
     if (opts.allowOverlap && isAdmin(opts.actor)) return { overridden: space };
     throw conflict('space_conflict', { conflicts: space.map(describeSpaceConflict), canOverride: isAdmin(opts.actor) }, 'Space is busy');
@@ -155,17 +165,17 @@ function asRuleEntry(e) {
 }
 
 /** @param {import('../../shared/rules/conflicts.js').SpaceConflict} c */
-function describeSpaceConflict(c) {
+export function describeSpaceConflict(c) {
   return { id: c.entry.id, title: c.entry.type === 'room_only' ? null : c.entry.title, type: c.entry.type, owner: c.entry.owner_name, date: c.date, start: c.start, end: c.end, kind: c.kind, session: c.session };
 }
 
 /** @param {import('../../shared/rules/conflicts.js').RoomConflict} c */
-function describeRoomConflict(c) {
+export function describeRoomConflict(c) {
   return { id: c.entry.id, title: c.entry.title, owner: c.entry.owner_name, room_id: c.room_id, check_in: c.check_in, check_out: c.check_out, booking: c.booking };
 }
 
 /** Validate references (space enabled, rooms exist, media exists). @param {Workspace} ws @param {any} e @param {any} [prev] */
-function assertReferences(ws, e, prev) {
+export function assertReferences(ws, e, prev) {
   if (e.space_id) {
     const s = /** @type {any} */ (ws.db.prepare('SELECT enabled FROM spaces WHERE id = ?').get(e.space_id));
     if (!s) throw new ApiError(400, 'validation_error', 'Unknown space', { fields: { space_id: 'invalid_value' } });
@@ -227,7 +237,7 @@ export function createEntry(app, ws, actor, input, extra = {}) {
 }
 
 /** New sessions and bookings can't start in the past. @param {any} e @param {string} tz */
-function assertNotPast(e, tz) {
+export function assertNotPast(e, tz) {
   e.sessions.forEach((/** @type {any} */ s, /** @type {number} */ i) => {
     if (isPastSlot(s.date, s.start, tz)) throw new ApiError(400, 'validation_error', 'Session in the past', { fields: { [`sessions.${i}.start`]: 'in_the_past' } });
   });
@@ -292,7 +302,7 @@ export function updateEntry(app, ws, actor, id, input, version) {
 }
 
 /** @param {any[]} a @param {any[]} b */
-function sameBookings(a, b) {
+export function sameBookings(a, b) {
   const key = (/** @type {any} */ x) => `${x.room_id}|${x.check_in}|${x.check_out}|${x.guests ?? 1}|${x.guest_names ?? ''}`;
   return a.map(key).sort().join('\n') === b.map(key).sort().join('\n');
 }

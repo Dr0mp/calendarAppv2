@@ -257,7 +257,7 @@
     min-block-size: 24px;
     line-height: 1.4;
 
-    & input {
+    & > input {
       flex: none;
       inline-size: 18px;
       block-size: 18px;
@@ -265,7 +265,7 @@
       accent-color: var(--accent);
     }
 
-    &:has(input:disabled) {
+    &:has(> input:disabled) {
       color: var(--text-disabled);
       cursor: not-allowed;
     }

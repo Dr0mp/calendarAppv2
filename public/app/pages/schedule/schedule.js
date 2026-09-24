@@ -21,7 +21,7 @@ import { emptyForm, fromEntry, parsePrice, shiftSessions, toPayload } from './mo
 import { DateTimeSection } from './sessions.js';
 import { RoomRows } from './rooms.js';
 import { CoverPicker } from './cover.js';
-import { RecurrenceSection, recurrenceSummary } from './recurrence.js';
+import { RecurrenceSection, recurrenceSummary, toRecurrence } from './recurrence.js';
 
 const SECTIONS = ['type', 'details', 'datetime', 'recurrence', 'rooms', 'publishing'];
 /** @type {Record<string, string>} */
@@ -343,12 +343,27 @@ function EntryForm({ entry, initial, form, setForm, draftKey, draftRestored, onD
       toast('danger', t('errors.space_conflict'));
       return;
     }
+    // Editing an occurrence of a series asks for the scope, with a real Cancel.
+    let scope = 'one';
+    if (entry?.series_id) {
+      const choice = await confirm({
+        title: t('series.editScopeTitle'),
+        confirmLabel: t('common.save'),
+        choices: [
+          { value: 'one', label: t('series.scopeOne') },
+          { value: 'following', label: t('series.scopeFollowing'), hint: t('series.scopeFollowingHint') },
+          { value: 'all', label: t('series.scopeAll'), hint: t('series.scopeAllHint') },
+        ],
+      });
+      if (!choice) return;
+      scope = choice;
+    }
     setBusy(true);
     saving.current = true;
     try {
       const saved = entry
-        ? await api('PATCH', `/entries/${entry.id}`, { body: payload, version })
-        : await api('POST', '/entries', { body: { entry: payload, recurrence: form.recurrence ?? undefined } });
+        ? await api('PATCH', `/entries/${entry.id}`, { body: payload, version, query: { scope } })
+        : await api('POST', '/entries', { body: { entry: payload, recurrence: toRecurrence(form.recurrence) } });
       toast('success', entry ? t('schedule.updated') : form.recurrence && saved.created > 1 ? t('schedule.createdSeries', { n: saved.created }) : t(`schedule.created_${form.type}`));
       onSaved(saved);
     } catch (err) {
@@ -361,7 +376,9 @@ function EntryForm({ entry, initial, form, setForm, draftKey, draftRestored, onD
         setVersion(fresh.version);
       } else if (err.code === 'space_conflict' || err.code === 'room_conflict') {
         setServerConflict(err.details);
-        toast('danger', err.text);
+        toast('danger', err.details?.dates?.length > 1 || (form.recurrence && err.details?.dates?.length)
+          ? t('series.conflictDates', { dates: err.details.dates.map((/** @type {string} */ d) => fmtDateShort(d)).join(', ') })
+          : err.text);
         document.getElementById('conflicts')?.scrollIntoView({ block: 'center', behavior: 'smooth' });
       } else if (Object.keys(err.fields).length) {
         setErrors(err.fields);

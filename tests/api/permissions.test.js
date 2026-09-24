@@ -91,6 +91,9 @@ export const ENTRY_ROWS = [
   ['PUT', () => `/entries/${fx.userEntry}/room-bookings`, { room_bookings: [] }, { anon: 401, user: 403 }],
   ['POST', '/availability', { type: 'event', sessions: [] }, { anon: 401, user: 200, moderator: 200, admin: 200, demo: 200, demo_admin: 200 }],
   ['GET', '/me/counts', undefined, { anon: 401, user: 200, admin: 200 }],
+  ['POST', '/series/preview', { rule: { freq: 'weekly', count: 2 }, sessions: [{ date: '2099-06-01', start: '10:00', end: '11:00' }] },
+    { anon: 401, user: 200, moderator: 200, admin: 200, demo: 200, demo_admin: 200 }],
+  ['GET', '/series/00000000-0000-7000-8000-000000000000', undefined, { anon: 401, user: 404, admin: 404 }],
 ];
 
 describe('account endpoints', () => runMatrix(ACCOUNT_ROWS));

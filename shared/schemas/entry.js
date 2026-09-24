@@ -120,3 +120,25 @@ export const AvailabilityInput = z.strictObject({
   /** Extra dates whose busy intervals the strip needs. */
   dates: z.array(dateStr).max(62).optional(),
 });
+
+export const RuleInput = z.strictObject({
+  freq: z.enum(['weekly', 'monthly_day', 'monthly_weekday']),
+  interval: z.number().int().min(1).max(12).optional(),
+  weekdays: z.array(z.number().int().min(1).max(7)).max(7).optional(),
+  count: z.number().int().min(2, 'rule_count_range').max(52, 'rule_count_range').optional(),
+  until: dateStr.optional(),
+});
+
+export const RecurrenceInput = z.strictObject({
+  rule: RuleInput,
+  exceptions: z.array(dateStr).max(120).default([]),
+});
+
+export const SeriesPreviewInput = z.strictObject({
+  type: z.enum(['event', 'blocked']).default('event'),
+  rule: RuleInput,
+  sessions: z.array(SessionInput).min(1).max(MAX_SESSIONS),
+  spaceId: id.nullish(),
+  rooms: z.array(BookingInput.partial({ guests: true })).max(20).optional(),
+  exceptions: z.array(dateStr).max(120).optional(),
+});

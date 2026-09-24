@@ -3,14 +3,12 @@ import { html, useEffect, useMemo, useState } from '../../html.js';
 import { t } from '../../i18n/index.js';
 import { isStaff, isAdmin } from '../../state/session.js';
 import { usePageChrome } from '../../state/chrome.js';
-import { revision, invalidateEntries } from '../../state/entries.js';
-import { refreshCounts } from '../../state/counts.js';
-import { api, ApiError } from '../../api.js';
+import { revision } from '../../state/entries.js';
+import { api } from '../../api.js';
 import { Badge, Button, EmptyState, Icon, SearchField, SkeletonList, Tabs } from '../../components/ui.js';
-import { confirm } from '../../components/overlay.js';
-import { toast } from '../../components/toast.js';
 import { fmtDateShort, fmtDayMonth } from '../../time.js';
 import { TYPE_ICON, TYPE_TONE, entryTitle, priceText } from '../entry/detail.js';
+import { deleteEntryFlow } from '../entry/actions.js';
 
 /** @param {string} s */
 const fold = (s) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
@@ -61,18 +59,7 @@ export default function MyEntries() {
   const past = filtered.filter((e) => e.past).sort((a, b) => nextKey(b).localeCompare(nextKey(a)));
 
   /** @param {any} e */
-  async function remove(e) {
-    const ok = await confirm({ title: t('entry.deleteTitle', { title: entryTitle(e) }), message: t('entry.deleteText'), confirmLabel: t('common.delete'), danger: true });
-    if (!ok) return;
-    try {
-      await api('DELETE', `/entries/${e.id}`, { version: e.version, query: { scope: 'one' } });
-      toast('success', t('entry.deleted'));
-      invalidateEntries();
-      refreshCounts();
-    } catch (err) {
-      toast('danger', err instanceof ApiError ? err.text : t('errors.generic'));
-    }
-  }
+  const remove = (e) => deleteEntryFlow(e);
 
   const tabs = [
     { value: 'all', label: t('myEntries.all'), count: counts.all },
@@ -131,7 +118,7 @@ function EntryCard({ e, onDelete }) {
     <div class="entry-card-main">
       <div class="cluster" style=${{ '--cluster-gap': 'var(--space-2)' }}>
         <${Badge} tone=${TYPE_TONE[e.type]} icon=${TYPE_ICON[e.type]}>${t(`entryType.${e.type}`)}</${Badge}>
-        ${e.series_id && html`<${Badge} icon="repeat">${t('entry.seriesOf', { i: (e.occurrence_index ?? 0) + 1, n: e.series_total })}</${Badge}>`}
+        ${e.series_id && html`<${Badge} icon="repeat">${t('entry.seriesOf', { freq: e.series_freq ?? '', i: (e.occurrence_index ?? 0) + 1, n: e.series_total })}</${Badge}>`}
         <span class="small muted num">${when}</span>
       </div>
       <h3 class="entry-card-title"><a href=${`?entry=${e.id}`}>${entryTitle(e)}</a></h3>

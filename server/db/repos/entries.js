@@ -7,7 +7,8 @@ import { localToUtc } from '../../../shared/rules/time.js';
 const ENTRY_SELECT = `
   SELECT e.*, u.name AS owner_name, u.color AS owner_color, u.initials AS owner_initials,
          s.name AS space_name, s.capacity_people AS space_capacity, s.color AS space_color,
-         (SELECT COUNT(*) FROM entries x WHERE x.series_id = e.series_id AND e.series_id IS NOT NULL) AS series_total
+         (SELECT COUNT(*) FROM entries x WHERE x.series_id = e.series_id AND e.series_id IS NOT NULL) AS series_total,
+         (SELECT rule FROM series sr WHERE sr.id = e.series_id) AS series_rule
   FROM entries e
   LEFT JOIN auth.users u ON u.id = e.owner_id
   LEFT JOIN spaces s ON s.id = e.space_id`;

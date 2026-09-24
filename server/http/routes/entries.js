@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import { body, ifMatch, requireUser, withVersion, wsOf } from '../app.js';
-import { ApiError, forbidden, parse } from '../errors.js';
-import { AvailabilityInput, EntryInput, ReassignInput, RoomBookingsInput } from '../../../shared/schemas/entry.js';
+import { ApiError, forbidden, notFound, parse } from '../errors.js';
+import { AvailabilityInput, EntryInput, ReassignInput, RoomBookingsInput, SeriesPreviewInput } from '../../../shared/schemas/entry.js';
 import { isValidDate } from '../../../shared/schemas/common.js';
 import { diffDays, todayIn } from '../../../shared/rules/time.js';
 import * as entries from '../../services/entries.js';
@@ -126,3 +126,18 @@ entryRoutes.get('/me/counts', (c) => {
   return c.json({ myUpcoming, promotions });
 });
 
+
+entryRoutes.post('/series/preview', async (c) => {
+  const actor = actorOf(c);
+  const ws = wsOf(c);
+  const input = await body(c, SeriesPreviewInput);
+  if (input.rooms?.length && actor.role === 'user') throw forbidden('rooms_staff_only');
+  return c.json(series.previewSeries(ws, actor, input));
+});
+
+entryRoutes.get('/series/:id', (c) => {
+  actorOf(c);
+  const view = series.seriesView(wsOf(c), c.req.param('id'));
+  if (!view) throw notFound('series_not_found');
+  return c.json(view);
+});
