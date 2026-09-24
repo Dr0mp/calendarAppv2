@@ -8,6 +8,7 @@ passkeys and `__Host-` secure cookies need it.
 - [Configuration](#configuration)
 - [Linux: systemd + Caddy](#linux-systemd--caddy)
 - [Windows: start.bat and NSSM](#windows-startbat-and-nssm)
+- [Render](#render)
 - [First start](#first-start)
 - [Backups and restore](#backups-and-restore)
 - [Moving from v1](#moving-from-v1)
@@ -160,6 +161,32 @@ only work on `localhost`; add the LAN address to `APP_ORIGINS`.
 `sharp` and `@node-rs/argon2` ship prebuilt Windows binaries. `ffmpeg-static` and
 `ffprobe-static` are optional: if their download is blocked, videos still upload, only
 without duration checks and poster frames.
+
+## Render
+
+**Free demo.** The repository has a `render.yaml` blueprint: Render dashboard → **New →
+Blueprint** → pick the repository. It builds with `npm ci --include=dev && npm run vendor`,
+starts with `npm start` and takes its public URL from Render (`RENDER_EXTERNAL_URL`), so no
+settings are needed. Visitors click the demo chips on the sign-in page.
+
+The free plan has no persistent disk and sleeps after ~15 minutes idle (the next visit takes
+30–60 s). Every start rebuilds the demo from the sample content; anything else is lost.
+Ignore the root-admin setup link in the logs.
+
+**Real use** needs a paid instance (Starter or higher) with a **disk**:
+
+| Setting | Value |
+|---|---|
+| Plan | Starter or higher, **1 instance** (SQLite) |
+| Disk | Mount path `/var/data`, 10 GB |
+| `DATA_DIR` / `BACKUP_DIR` | `/var/data` / `/var/data/backups` |
+| `APP_URL` | Your custom domain, if any (passkeys are tied to it) |
+| `SMTP_URL`, `MAIL_FROM` | For invites and password resets |
+
+Keep `TRUST_PROXY=1`. Render terminates HTTPS; do not set `TLS_CERT_FILE`/`TLS_KEY_FILE`.
+The setup link appears in the **Logs** tab; `npm run import-v1` and `npm run restore` can run
+from the **Shell** tab (stop traffic first for a restore). Deploys with a disk have a few
+seconds of downtime. Download backups regularly: nightly ones sit on the same disk.
 
 ## First start
 

@@ -1,0 +1,34 @@
+# Render blueprint: a free, public demo of Casa Artis Calendar.
+#
+# Deploy: Render dashboard → New → Blueprint → pick this repository.
+#
+# The free plan has no persistent disk and sleeps when idle, so everything
+# is rebuilt on each start. That suits the demo (visitors use the demo
+# chips on the sign-in page), but NOT real use: accounts and uploads made
+# outside the demo are lost on restart. For the team's real calendar use a
+# paid instance with a disk (see docs/deploy.md → Render).
+services:
+  - type: web
+    name: casa-artis-demo
+    runtime: node
+    plan: free
+    # Dev dependencies hold the front-end libraries that `vendor` self-hosts.
+    buildCommand: npm ci --include=dev && npm run vendor
+    startCommand: npm start
+    healthCheckPath: /api/v1/health
+    envVars:
+      - key: NODE_VERSION
+        value: "24"
+      - key: NODE_ENV
+        value: production
+      # APP_URL defaults to Render's public URL; set it for a custom domain.
+      - key: TRUST_PROXY
+        value: "1"
+      - key: ASSETS
+        value: local
+      - key: ENABLE_DEMO_ACCOUNTS
+        value: "1"
+      - key: SEED_SAMPLE_CONTENT
+        value: "1"
+      - key: HIBP_CHECK
+        value: "1"

@@ -51,6 +51,8 @@ const EnvSchema = z.object({
 export function loadConfig(env = process.env) {
   // Treat empty strings as "unset" so defaults apply.
   const clean = Object.fromEntries(Object.entries(env).filter(([, v]) => v !== undefined && v !== ''));
+  // On Render the public URL is provided; use it when APP_URL is not set.
+  if (!clean.APP_URL && clean.RENDER_EXTERNAL_URL) clean.APP_URL = clean.RENDER_EXTERNAL_URL;
   const parsed = EnvSchema.safeParse(clean);
   if (!parsed.success) {
     const lines = parsed.error.issues.map((i) => `  ${i.path.join('.')}: ${i.message}`);
